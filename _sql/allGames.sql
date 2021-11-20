@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Servidor: 127.0.0.1
--- Tiempo de generación: 20-11-2021 a las 17:43:18
+-- Tiempo de generación: 20-11-2021 a las 22:08:33
 -- Versión del servidor: 10.4.17-MariaDB
 -- Versión de PHP: 8.0.1
 
@@ -63,6 +63,27 @@ INSERT INTO `genero` (`id`, `nombre`) VALUES
 -- --------------------------------------------------------
 
 --
+-- Estructura de tabla para la tabla `genero_juego`
+--
+
+CREATE TABLE `genero_juego` (
+  `generoId` int(11) NOT NULL,
+  `juegoId` int(11) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+--
+-- Volcado de datos para la tabla `genero_juego`
+--
+
+INSERT INTO `genero_juego` (`generoId`, `juegoId`) VALUES
+(5, 1),
+(4, 3),
+(2, 2),
+(7, 2);
+
+-- --------------------------------------------------------
+
+--
 -- Estructura de tabla para la tabla `juego`
 --
 
@@ -73,18 +94,17 @@ CREATE TABLE `juego` (
   `portada` varchar(100) NOT NULL,
   `trailer` text NOT NULL,
   `pegi` varchar(100) NOT NULL,
-  `generoId` int(11) NOT NULL,
-  `plataformaId` int(11) NOT NULL
+  `precio` decimal(10,2) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 --
 -- Volcado de datos para la tabla `juego`
 --
 
-INSERT INTO `juego` (`id`, `nombre`, `descripcion`, `portada`, `trailer`, `pegi`, `generoId`, `plataformaId`) VALUES
-(1, 'FIFA 22', 'FIFA 22 es un videojuego de fútbol desarrollado por EA Vancouver y EA Romania, siendo publicado por EA Sports. Está disponible para PlayStation 4, PlayStation 5, Xbox Series X/S, Xbox One, Microsoft Windows, Google Stadia y Nintendo Switch. Es la vigésimo novena entrega en la serie FIFA y fue lanzado el 1 de octubre de manera global.', 'fifa.jpg', '<iframe width=\"560\" height=\"315\" src=\"https://www.youtube.com/watch?v=SYsi5QuOJNE\" title=\"YouTube video player\" frameborder=\"0\" allow=\"accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture\" allowfullscreen></iframe>', 'pegi3.jpg', 5, 1),
-(2, 'The Elder Scrolls V: Skyrim', 'The Elder Scrolls V: Skyrim es un videojuego de rol de acción del tipo mundo abierto desarrollado por Bethesda Game Studios y publicado por Bethesda Softworks. Skyrim es la quinta entrega de la saga de videojuegos de acción y fantasía de la serie The Elder Scrolls y es posterior a The Elder Scrolls IV: Oblivion y predecesor de The Elder Scrolls Online.', 'skyrim.jpg', '<iframe width=\"560\" height=\"315\" src=\"https://www.youtube.com/watch?v=JSRtYpNRoN0\" title=\"YouTube video player\" frameborder=\"0\" allow=\"accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture\" allowfullscreen></iframe>', 'pegi18.jpg', 6, 2),
-(3, 'Forza', 'Forza Horizon 5 es un videojuego de carreras desarrollado por Playground Games y publicado por Xbox Game Studios. Es el quinto título de Forza Horizon y la duodécima entrega principal de la serie Forza. El juego está ambientado en una representación ficticia de México', 'forza.jpg', '<iframe width=\"560\" height=\"315\" src=\"https://www.youtube.com/watch?v=FYH9n37B7Yw\" title=\"YouTube video player\" frameborder=\"0\" allow=\"accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture\" allowfullscreen></iframe>', 'pegi3.jpg', 4, 3);
+INSERT INTO `juego` (`id`, `nombre`, `descripcion`, `portada`, `trailer`, `pegi`, `precio`) VALUES
+(1, 'FIFA 22', 'FIFA 22 es un videojuego de fútbol desarrollado por EA Vancouver y EA Romania, siendo publicado por EA Sports. Está disponible para PlayStation 4, PlayStation 5, Xbox Series X/S, Xbox One, Microsoft Windows, Google Stadia y Nintendo Switch. Es la vigésimo novena entrega en la serie FIFA y fue lanzado el 1 de octubre de manera global.', 'fifa.jpg', '<iframe width=\"560\" height=\"315\" src=\"https://www.youtube.com/watch?v=SYsi5QuOJNE\" title=\"YouTube video player\" frameborder=\"0\" allow=\"accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture\" allowfullscreen></iframe>', 'pegi3.jpg', '59.99'),
+(2, 'The Elder Scrolls V: Skyrim', 'The Elder Scrolls V: Skyrim es un videojuego de rol de acción del tipo mundo abierto desarrollado por Bethesda Game Studios y publicado por Bethesda Softworks. Skyrim es la quinta entrega de la saga de videojuegos de acción y fantasía de la serie The Elder Scrolls y es posterior a The Elder Scrolls IV: Oblivion y predecesor de The Elder Scrolls Online.', 'skyrim.jpg', '<iframe width=\"560\" height=\"315\" src=\"https://www.youtube.com/watch?v=JSRtYpNRoN0\" title=\"YouTube video player\" frameborder=\"0\" allow=\"accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture\" allowfullscreen></iframe>', 'pegi18.jpg', '39.99'),
+(3, 'Forza', 'Forza Horizon 5 es un videojuego de carreras desarrollado por Playground Games y publicado por Xbox Game Studios. Es el quinto título de Forza Horizon y la duodécima entrega principal de la serie Forza. El juego está ambientado en una representación ficticia de México', 'forza.jpg', '<iframe width=\"560\" height=\"315\" src=\"https://www.youtube.com/watch?v=FYH9n37B7Yw\" title=\"YouTube video player\" frameborder=\"0\" allow=\"accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture\" allowfullscreen></iframe>', 'pegi3.jpg', '49.99');
 
 -- --------------------------------------------------------
 
@@ -121,6 +141,28 @@ INSERT INTO `plataforma` (`id`, `nombre`, `logo`) VALUES
 (1, 'Playstation', 'ps.jpg'),
 (2, 'Pc', 'pc.jpg'),
 (3, 'Xbox', 'xbox.jpg');
+
+-- --------------------------------------------------------
+
+--
+-- Estructura de tabla para la tabla `plataforma_juego`
+--
+
+CREATE TABLE `plataforma_juego` (
+  `plataformaId` int(11) NOT NULL,
+  `juegoId` int(11) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+--
+-- Volcado de datos para la tabla `plataforma_juego`
+--
+
+INSERT INTO `plataforma_juego` (`plataformaId`, `juegoId`) VALUES
+(2, 2),
+(1, 1),
+(2, 1),
+(3, 3),
+(3, 1);
 
 -- --------------------------------------------------------
 
@@ -191,12 +233,17 @@ ALTER TABLE `genero`
   ADD PRIMARY KEY (`id`);
 
 --
+-- Indices de la tabla `genero_juego`
+--
+ALTER TABLE `genero_juego`
+  ADD KEY `fk_genero_juego_generoId` (`generoId`),
+  ADD KEY `fk_genero_juego_juegoId` (`juegoId`);
+
+--
 -- Indices de la tabla `juego`
 --
 ALTER TABLE `juego`
-  ADD PRIMARY KEY (`id`),
-  ADD KEY `fk_juego_generoId` (`generoId`),
-  ADD KEY `fk_juego_plataformaId` (`plataformaId`);
+  ADD PRIMARY KEY (`id`);
 
 --
 -- Indices de la tabla `pedido`
@@ -210,6 +257,13 @@ ALTER TABLE `pedido`
 --
 ALTER TABLE `plataforma`
   ADD PRIMARY KEY (`id`);
+
+--
+-- Indices de la tabla `plataforma_juego`
+--
+ALTER TABLE `plataforma_juego`
+  ADD KEY `fk_plataforma_juego_plataformaId` (`plataformaId`),
+  ADD KEY `fk_plataforma_juego_juegoId` (`juegoId`);
 
 --
 -- Indices de la tabla `resenia`
@@ -284,17 +338,24 @@ ALTER TABLE `carrito`
   ADD CONSTRAINT `carrito_ibfk_2` FOREIGN KEY (`juegoId`) REFERENCES `juego` (`id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 --
--- Filtros para la tabla `juego`
+-- Filtros para la tabla `genero_juego`
 --
-ALTER TABLE `juego`
-  ADD CONSTRAINT `juego_ibfk_1` FOREIGN KEY (`plataformaId`) REFERENCES `plataforma` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
-  ADD CONSTRAINT `juego_ibfk_2` FOREIGN KEY (`generoId`) REFERENCES `genero` (`id`) ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE `genero_juego`
+  ADD CONSTRAINT `genero_juego_ibfk_1` FOREIGN KEY (`generoId`) REFERENCES `genero` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  ADD CONSTRAINT `genero_juego_ibfk_2` FOREIGN KEY (`juegoId`) REFERENCES `juego` (`id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 --
 -- Filtros para la tabla `pedido`
 --
 ALTER TABLE `pedido`
   ADD CONSTRAINT `pedido_ibfk_1` FOREIGN KEY (`usuarioId`) REFERENCES `usuario` (`id`) ON DELETE CASCADE ON UPDATE CASCADE;
+
+--
+-- Filtros para la tabla `plataforma_juego`
+--
+ALTER TABLE `plataforma_juego`
+  ADD CONSTRAINT `plataforma_juego_ibfk_1` FOREIGN KEY (`plataformaId`) REFERENCES `plataforma` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  ADD CONSTRAINT `plataforma_juego_ibfk_2` FOREIGN KEY (`juegoId`) REFERENCES `juego` (`id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 --
 -- Filtros para la tabla `resenia`
