@@ -213,6 +213,8 @@ public static function destruirSesionRamYCookie()
     unset($_SESSION); // para dejarla como si nunca hubiese existido
 }
 
+
+/*  COOKIE  */
 public static function generarCookieRecordar()
 {
     $arrayUsuario = DAO::usuarioObtener($_REQUEST["identificador"], $_REQUEST["contrasenna"]);
@@ -270,9 +272,127 @@ public static function intentarCanjearSesionCookie(): bool
 
 }
 
+/* JUEGO */
 
+private static function juegoCrearDesdeRS(array $juego): Juego
+    {
+        return new Juego($juego["id"], $juego["nombre"], $juego["descripcion"], $juego["portada"], $juego["trailer"], $juego["pegi"], $juego["precio"]);
+    }
 
+public static function juegoObtenerPorId(int $id)
+    {
+        $rs = self::ejecutarConsulta("SELECT * FROM juego WHERE id=?", [$id]);
+        if ($rs) return self::juegoCrearDesdeRs($rs[0]);
+        else return null;
+    }
 
+    public static function juegoObtenerTodos(): array
+    {
+        $datos = [];
+        $rs = self::ejecutarConsulta("SELECT * FROM juego ORDER BY nombre", []);
+
+        foreach ($rs as $fila) {
+            $juego =  self::juegoCrearDesdeRs($fila);
+            array_push($datos, $juego);
+        }
+
+        return $datos;
+    }
+
+    public static function juegoAgregar($nombre, $descripcion, $portada, $trailer, $pegi, $precio)
+    {
+        self::ejecutarActualizacion("INSERT INTO juego (id, nombre, descripcion, portada, trailer, pegi, precio) VALUES (NULL, ?, ?, ?, ?, ?, ?);",
+            [$nombre, $descripcion, $portada, $trailer, $pegi, $precio]);
+    }
+
+    public static function juegoActualizar(int $id, string $nuevoNombre, string $nuevaDescripcion, string $nuevaPortada, string $nuevoTrailer, string $nuevoPegi, int $nuevoPrecio)
+    {
+        self::ejecutarActualizacion("UPDATE juego SET nombre = ?, descripcion = ?, portada =?, trailer=?, pegi=?, precio=? WHERE id=?",
+            [$nuevoNombre, $nuevaDescripcion, $nuevaPortada,  $nuevoTrailer, $nuevoPegi, $nuevoPrecio, $id]);
+    }
+
+    public static function juegoEliminar($id)
+    {
+        self::ejecutarActualizacion(
+            "DELETE from juego WHERE id=?",
+            [$id]);
+    }
+
+    public static function juegosObtenerWishList(int $usuarioId): ?array
+    {
+        $juegos = [];
+        $rs = self::ejecutarConsulta(
+            "SELECT juegoId FROM wishlist 
+            WHERE usuarioId LIKE ?",
+            [$usuarioId]
+        );
+
+        if (!$rs) {
+            return null;
+        }
+
+        foreach ($rs as $fila) {
+            $juego = self::juegoObtenerPorId($fila);
+            array_push($juegos, $juego);
+        }
+
+        return $juegos;
+    }
+
+    /* GENERO */
+
+    private static function generoCrearDesdeRs(array $fila): Genero
+    {
+        return new Genero($fila["id"], $fila["nombre"]);
+    }
+
+    public static function generoObtenerPorId(int $id)
+    {
+        $rs = self::ejecutarConsulta("SELECT * FROM genero WHERE id=?", [$id]);
+        if ($rs) return self::generoCrearDesdeRs($rs[0]);
+        else return null;
+    }
+
+    public static function generoObtenerTodos(): array
+    {
+        $datos = [];
+        $rs = self::ejecutarConsulta("SELECT * FROM genero ORDER BY nombre", []);
+
+        foreach ($rs as $fila) {
+            $genero =  self::generoCrearDesdeRs($fila);
+            array_push($datos, $genero);
+        }
+
+        return $datos;
+    }
+
+  /*  public static function generoAgregar($nombre)
+    {
+        self::ejecutarActualizacion("INSERT INTO genero (id, nombre) VALUES (NULL, ?);",
+            [$nombre]);
+    }
+
+    public static function generoActualizar(int $id, string $nuevoNombre)
+    {
+        self::ejecutarActualizacion("UPDATE genero SET nombre = ? WHERE id=?",
+            [$nuevoNombre, $id]);
+    }
+
+    public static function generoEliminar($id)
+    {
+        self::ejecutarActualizacion(
+            "DELETE from genero WHERE id=?",
+            [$id]);
+    }
+
+    */
+
+    public static function pedidoCrear(int $usuarioId): Pedido
+    {
+        self::ejecutarActualizacion("INSERT INTO pedido (usuarioId) VALUES (?) ", [$usuarioId]);
+        $pedido = new Pedido($usuarioId, []);
+        return $pedido;
+    }
 
 
 
