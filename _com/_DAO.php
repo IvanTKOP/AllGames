@@ -34,50 +34,26 @@ class DAO
 
     private static function ejecutarConsulta(string $sql, array $parametros): array
     {
-        if (!isset(self::$pdo)) {
-            self::$pdo = self::obtenerPdoConexionBd();
+        if (!isset(Self::$pdo)) {
+            Self::$pdo =
+            Self::obtenerPdoConexionBD();
         }
 
-        $select = self::$pdo->prepare($sql);
+        $select = Self::$pdo->prepare($sql);
         $select->execute($parametros);
-        $rs = $select->fetchAll();
-
-        return $rs;
+        $resultado = $select->fetchAll();
+        return $resultado;
     }
 
-    private static function ejecutarInsert(string $sql, array $parametros): ?int
+
+    private static function ejecutarActualizacion(string $sql, array $parametros): void
     {
         if (!isset(self::$pdo)) {
             self::$pdo = self::obtenerPdoConexionBd();
         }
 
-        $insert = self::$pdo->prepare($sql);
-        $sqlConExito = $insert->execute($parametros);
-
-        if (!$sqlConExito) {
-            return null;
-        } else {
-            return self::$pdo->lastInsertId();
-        }
-
-    }
-
-
-    private static function ejecutarUpdel(string $sql, array $parametros): ?int
-    {
-        if (!isset(self::$pdo)) {
-            self::$pdo = self::obtenerPdoConexionBd();
-        }
-
-        $updel = self::$pdo->prepare($sql);
-        $sqlConExito = $updel->execute($parametros);
-
-        if (!$sqlConExito) {
-            return null;
-        } else {
-            return $updel->rowCount();
-        }
-
+        $actualizacion = self::$pdo->prepare($sql);
+        $actualizacion->execute($parametros);
     }
 
     /* USUARIO */
@@ -387,14 +363,140 @@ public static function juegoObtenerPorId(int $id)
 
     */
 
-    public static function pedidoCrear(int $usuarioId): Pedido
+    /*  PEDIDO  */
+
+    private static function pedidoCrearDesdeRS(array $pedido): Pedido
+{
+    return new Pedido($pedido["id"], $pedido["usuarioId"], $pedido["gamekey"], $pedido["fechaPedido"], $pedido["tiempoAlquiler"], $pedido["comprado"]);
+}
+
+    public static function pedidoCrear(int $usuarioId, $tiempoAlquiler, $comprado): Pedido
     {
-        self::ejecutarActualizacion("INSERT INTO pedido (usuarioId) VALUES (?) ", [$usuarioId]);
-        $pedido = new Pedido($usuarioId, []);
-        return $pedido;
+        $fechaPedido= obtenerFecha();
+        $gamekey= generarCadenaAleatoria(12);
+
+        self::ejecutarActualizacion("INSERT INTO pedido (id, usuarioId, gamekey, fechaPedido, tiempoAlquiler, comprado) VALUES (NULL, ?, ?, ?, ?, ?) ", [$usuarioId, $gamekey, $fechaPedido, $tiempoAlquiler, $comprado]);
     }
 
+    public static function pedidoObtenerPorId(int $id)
+    {
+        $rs = self::ejecutarConsulta("SELECT * FROM pedido WHERE id=?", [$id]);
+        if ($rs) return self::pedidoCrearDesdeRs($rs[0]);
+        else return null;
+    }
 
+    /*  PLATAFORMA  */
+
+    private static function plataformaCrearDesdeRS(array $plataforma): Plataforma
+    {
+        return new Plataforma($plataforma["id"], $plataforma["nombre"], $plataforma["logo"]);
+    }
+
+    public static function plataformaObtenerPorNombre(string $nombre): ?Plataforma
+    {
+        $rs = self::ejecutarConsulta(
+            "SELECT * FROM plataforma WHERE nombre LIKE ?",
+            [$nombre]
+        );
+        if ($rs) return self::plataformaCrearDesdeRS($rs[0]);
+        else return null;
+    }
+
+    public static function plataformaObtenerPorJuegoId(int $id): ?array
+    {
+
+        $plataformas = [];
+
+        $rs = self::ejecutarConsulta(
+            "SELECT plataforma.* FROM plataforma 
+            INNER JOIN plataforma_juego ON plataforma.id = plataforma_juego.plataformaId 
+            LEFT JOIN juego ON plataforma_juego.juegoId = juego.id 
+            WHERE juego.id = ?",
+            [$id]
+        );
+
+        foreach ($rs as $fila) {
+            $plataforma = self::plataformaCrearDesdeRS($fila);
+            array_push($plataformas, $plataforma);
+        }
+
+
+        if ($rs) {
+            return $plataformas;
+        } else {
+            return null;
+        }
+    }
+
+    /*  WISHLIST  */
+
+    public static function aniadirJuegoWishList(int $juegoId, int $usuarioId)
+    {
+        $comprobar= self::ejecutarConsulta("SELECT ? FROM wishlist WHERE usuarioId = ?", [$juegoId, $usuarioId]);
+
+        if($comprobar->rowCount() == 0){
+            $rs = self::ejecutarActualizacion("INSERT INTO wishlist (juegoId, usuarioId) VALUES (?,?);", [$juegoId, $usuarioId]);   
+        }
+    }
+
+    public static function borraJuegoWishList(int $juegoId, int $usuarioId)
+    {
+        $comprobar= self::ejecutarConsulta("SELECT ? FROM wishlist WHERE usuarioId = ?", [$juegoId, $usuarioId]);
+
+        if($comprobar->rowCount() != 0){
+            $rs = self::ejecutarUpdel("DELETE FROM wishlist WHERE juegoId=? && usuarioId=?;", [$juegoId, $usuarioId]);   
+        }
+    }
+
+    /*  RESENIA  */
+    
+    private static function reseniaCrearDesdeRS(array $resenia): Resenia
+{
+    return new Resenia($resenia["id"], $resenia["valoracion"], $resenia["mensaje"], $resenia["fecha"], $resenia["juegoId"], $resenia["usuarioId"]);
+}
+
+public static function reseniasObtener(int $id): ?array
+{
+
+    $resenias = [];
+
+    $rs = self::ejecutarConsulta(
+        "SELECT * FROM resenia WHERE juegoId = ? ORDER BY fecha ASC",
+        [$id]
+    );
+
+    foreach ($rs as $fila) {
+        $resenia = self::reseniaCrearDesdeRS($fila);
+        array_push($resenias, $resenia);
+    }
+
+    if ($rs) {
+        return $resenias;
+    } else {
+        return null;
+    }
+}
+
+public static function insertarResenia(int $valoracion, string $mensaje, int $juegoId, int $usuarioId): bool
+{
+    $fecha = obtenerFecha();
+
+    if ($mensaje != NULL && $mensaje != "") { 
+        self::ejecutarActualizacion("INSERT INTO resenia (valoracion, mensaje, fecha, juegoId, usuarioId) VALUES (?, ?, ?, ?, ?);",
+            [$valoracion, $mensaje, $fecha, $juegoId, $usuarioId]);
+    }
+}
+
+public static function reseniaObtenerUltimaInsertada(): ?Resenia
+{
+    $rs = self::ejecutarConsulta(
+        "SELECT * FROM resenia WHERE id IN(SELECT MAX(id) FROM resenia)",
+        []
+    );
+
+    if ($rs) return self::reseniaCrearDesdeRs($rs[0]);
+        else return null;
+}
 
 
 
