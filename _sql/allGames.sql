@@ -131,7 +131,7 @@ VALUES
     `id` int(11) NOT NULL,
     `usuarioId` int(11) NOT NULL,
     `gameKey` varchar(12) CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish2_ci DEFAULT NULL,
-    `fechaPedido` datetime DEFAULT NULL,
+    `fechaPedido` datetime NOT NULL DEFAULT current_timestamp(),
     `tiempoAlquiler` int(2) NOT NULL,
     `comprado` tinyint(1) DEFAULT NULL
   ) ENGINE = InnoDB DEFAULT CHARSET = utf8 COLLATE = utf8_spanish_ci;

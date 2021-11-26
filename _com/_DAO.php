@@ -498,13 +498,82 @@ public static function reseniaObtenerUltimaInsertada(): ?Resenia
         else return null;
 }
 
+/*  CARRITO  */
 
 
+private static function carritoCrearDesdeRS(array $carrito): Carrito
+{
+    return new Carrito($carrito["pedidoId"], $carrito["juegoId"], $carrito["unidades"]);
+}
 
+public static function carritoAgregarJuego(int $pedidoId, int $juegoId, int $unidades): void
+{
+    /*$comprobar = self::ejecutarConsulta("SELECT * FROM carrito WHERE juegoId= ? AND pedidoId = ?");
 
+    if($comprobar->rowCount() != 0){*/
+    $pedidoId = self::pedidoObtenerPorId($pedidoId);
+    $unidades += 1;
+    self::ejecutarActualizacion(
+        "INSERT INTO carrito (pedidoId, juegoId, unidades) VALUES (?,?,?) ",
+        [$pedidoId, $juegoId, $unidades]
+    );
+}
 
+public static function carritoObtenerUsuarioId(int $usuarioId): array
+    {
 
+        $datos = [];
+        $rs = self::ejecutarConsulta(
+            "SELECT * FROM carrito c, pedido p WHERE usuarioId = ? AND c.pedidoId = p.pedidoId AND p.fechaPedido IS current_timestamp()",
+            [$usuarioId]
+        );
 
+        foreach ($rs as $fila) {
+            $juego = self::carritoCrearDesdeRs($fila);
+            array_push($datos, $juego);
+        }
+
+        return $datos;
+    }
+
+    public static function carritoObtenerJuego(int $juegoId): string
+    {
+        $rs = self::ejecutarConsulta(
+            "SELECT id FROM juego WHERE juegoId=?",
+            [$juegoId]
+        );
+        return $rs[0]["id"];
+    }
+
+    public static function carritoObtenerPrecio(int $juegoId): string
+    {
+        $rs = self::ejecutarConsulta(
+            "SELECT precio FROM juego WHERE juegoId=?",
+            [$juegoId]
+        );
+        return $rs[0]["precio"];
+    }
+
+    public static function carritoModificarUnidades(int $unidades, int $juegoId): string
+    {
+        return $rs = self::ejecutarActualizacion(
+            "UPDATE carrito SET unidades = ? WHERE juegoId=?",
+            [$unidades,$juegoId]
+         );
+       
+    }
+
+    public static function carritoEliminar($pedidoId,$juegoId): bool
+    {
+        $return = self::ejecutarActualizacion("DELETE FROM carrito WHERE pedidoId=? AND juegoId=?",
+        [$pedidoId,$juegoId]);
+        
+        if ($return) {
+            return true;
+        } else {
+            return false;
+        }
+    }
 
 
 
