@@ -60,7 +60,7 @@ class DAO
 
 private static function usuarioCrearDesdeRs(array $rs): Usuario
 {
-    return new Usuario($rs[0]["id"], $rs[0]["nombre"], $rs[0]["apellidos"], $rs[0]["email"], $rs[0]["identificador"], $rs[0]["contrasenna"],  $rs[0]["codigoCookie"]);
+    return new Usuario($rs["id"], $rs["nombre"], $rs["apellidos"], $rs["email"], $rs["identificador"], $rs["contrasenna"],  $rs["codigoCookie"]);
 }
 
 public static function usuarioObtener(string $identificador, string $contrasenna_sinHash): ?Usuario
@@ -71,19 +71,20 @@ public static function usuarioObtener(string $identificador, string $contrasenna
     );
 
     if($contrasenna_hash){
-        if(password_verify($contrasenna_sinHash, $contrasenna_hash[0]["contrasenna"])){
+        if(password_verify($contrasenna_sinHash, $contrasenna_hash[0]["contrasenna"])) {
             $contrasenna = $contrasenna_hash[0]["contrasenna"];
             $rs = self::ejecutarConsulta(
                 "SELECT * FROM usuario WHERE identificador=? AND contrasenna =?",
                 [$identificador, $contrasenna]
             );
-        }else{
+        }else {
             $rs = false;
         }
-    }else{
+    }else {
         $rs = false;
     }
-    if ($rs){
+
+    if ($rs) {
         return self::usuarioCrearDesdeRS($rs[0]);
     } else {
         return null;
@@ -137,12 +138,12 @@ public static function usuarioObtenerPorCookie(string $codigoCookie): ?Usuario
         else return null;
     }
 
-public static function usuarioCrear(string $nombre, string $apellidos, string $email, string $identificador, string $contrasenna, string  $codigoCookie): void
+public static function usuarioCrear(array $arrayUsuario): void
 {
-    $hash_contrasenna= password_hash($contrasenna, PASSWORD_DEFAULT);
+    $hash_contrasenna= password_hash($arrayUsuario["contrasenna"], PASSWORD_DEFAULT);
 
-    self::ejecutarUpdel("INSERT INTO usuario (nombre, apellidos, email, identificador, contrasenna, codigoCookie) VALUES (?,?,?,?,?,?);",
-        [$nombre, $apellidos, $email, $identificador, $hash_contrasenna, $codigoCookie]);
+    self::ejecutarActualizacion("INSERT INTO usuario (nombre, apellidos, email, identificador, contrasenna, codigoCookie) VALUES (?,?,?,?,?,NULL)",
+        [$arrayUsuario["nombre"], $arrayUsuario["apellidos"], $arrayUsuario["email"], $arrayUsuario["identificador"], $hash_contrasenna]);
 }
 
 public static function usuarioBorrar(): void
@@ -152,6 +153,24 @@ public static function usuarioBorrar(): void
         [$_SESSION["id"]]
     );
 
+}
+
+public static function usuarioComprobarAdministrador(int $id)
+{
+    $rs = self::ejecutarConsulta(
+        "SELECT administrador FROM usuario WHERE id=?",
+        [$id]
+    );
+    if ($rs[0]["administrador"]==1) return true;
+    else return false;
+}
+
+public static function usuarioComprobarDisponible(string $identificador): array
+{
+    return self::ejecutarConsulta(
+        "SELECT identificador FROM usuario WHERE identificador=?",
+        [$identificador]
+    );
 }
 
 
@@ -174,7 +193,7 @@ public static function establecerSesionRam($arrayUsuario)
     $_SESSION["nombre"] = $arrayUsuario->getNombre();
     $_SESSION["apellidos"] = $arrayUsuario->getApellidos();
     $_SESSION["identificador"] = $arrayUsuario->getidentificador();
-    $_SESSION["email"] = $usuario->getEmail();
+    $_SESSION["email"] = $arrayUsuario->getEmail();
 }
 
 public static function haySesionRamIniciada()
@@ -187,6 +206,16 @@ public static function destruirSesionRamYCookie()
 {
     session_destroy();
     unset($_SESSION); // para dejarla como si nunca hubiese existido
+
+    if (isset($_COOKIE["codigoCookie"])) {
+        unset($_COOKIE["codigoCookie"]);
+        setcookie("codigoCookie", "", time() - 3600);
+    }
+
+    if (isset($_COOKIE["identificador"])) {
+        unset($_COOKIE["identificador"]);
+        setcookie("identificador", "", time() - 3600);
+    }
 }
 
 
@@ -202,8 +231,8 @@ public static function generarCookieRecordar()
     );
 
 
-    $arrayCookies["identificador"] = setcookie("identificador", $arrayUsuario->getIdentificador(), time() + 60 * 60);
-    $arrayCookies["codigoCookie"] = setcookie("codigoCookie", $codigoCookie, time() + 60 * 60);
+    $arrayCookies["identificador"] = setcookie("identificador", $arrayUsuario->getIdentificador(), time() + 3600);
+    $arrayCookies["codigoCookie"] = setcookie("codigoCookie", $codigoCookie, time() + 3600);
 }
 
 public static function borrarCookieRecordar()
@@ -226,7 +255,6 @@ public static function borrarCookieRecordar()
 public static function intentarCanjearSesionCookie(): bool
 {
     if ((isset($_COOKIE["identificador"])) && (isset($_COOKIE["codigoCookie"]))) {
-
         $rs = self::ejecutarConsulta(
             "SELECT * FROM usuario WHERE identificador=? AND BINARY codigoCookie=?",
             [$_COOKIE["identificador"], $_COOKIE["codigoCookie"]]
@@ -275,6 +303,31 @@ public static function juegoObtenerPorId(int $id)
         return $datos;
     }
 
+    public static function juegoObtenerPorPlataforma(string $plataforma): ?array
+    {
+      $juegos = [];
+      $rs = self::ejecutarConsulta(
+          "SELECT juego.* FROM juego 
+          INNER JOIN plataforma_juego ON juego.id = plataforma_juego.juegoId 
+          LEFT JOIN plataforma ON plataforma_juego.plataformaId = plataforma.id 
+          WHERE plataforma.nombre = ?",
+          [$plataforma]
+      );
+
+
+      foreach ($rs as $fila) {
+        $juego = self::juegoCrearDesdeRS($fila);
+        array_push($juegos, $juego);
+    }
+
+
+    if ($rs) {
+        return $juegos;
+    } else {
+        return null;
+    }
+  }
+
     public static function juegoAgregar($nombre, $descripcion, $portada, $trailer, $pegi, $precio)
     {
         self::ejecutarActualizacion("INSERT INTO juego (id, nombre, descripcion, portada, trailer, pegi, precio) VALUES (NULL, ?, ?, ?, ?, ?, ?);",
@@ -307,8 +360,8 @@ public static function juegoObtenerPorId(int $id)
             return null;
         }
 
-        foreach ($rs as $fila) {
-            $juego = self::juegoObtenerPorId($fila);
+        foreach ($rs as $fila) {    
+            $juego = self::juegoObtenerPorId($fila["juegoId"]);
             array_push($juegos, $juego);
         }
 
@@ -342,48 +395,6 @@ public static function juegoObtenerPorId(int $id)
         return $datos;
     }
 
-  /*  public static function generoAgregar($nombre)
-    {
-        self::ejecutarActualizacion("INSERT INTO genero (id, nombre) VALUES (NULL, ?);",
-            [$nombre]);
-    }
-
-    public static function generoActualizar(int $id, string $nuevoNombre)
-    {
-        self::ejecutarActualizacion("UPDATE genero SET nombre = ? WHERE id=?",
-            [$nuevoNombre, $id]);
-    }
-
-    public static function generoEliminar($id)
-    {
-        self::ejecutarActualizacion(
-            "DELETE from genero WHERE id=?",
-            [$id]);
-    }
-
-    */
-
-    /*  PEDIDO  */
-
-    private static function pedidoCrearDesdeRS(array $pedido): Pedido
-{
-    return new Pedido($pedido["id"], $pedido["usuarioId"], $pedido["gamekey"], $pedido["fechaPedido"], $pedido["tiempoAlquiler"], $pedido["comprado"]);
-}
-
-    public static function pedidoCrear(int $usuarioId, $tiempoAlquiler, $comprado): Pedido
-    {
-        $fechaPedido= obtenerFecha();
-        $gamekey= generarCadenaAleatoria(12);
-
-        self::ejecutarActualizacion("INSERT INTO pedido (id, usuarioId, gamekey, fechaPedido, tiempoAlquiler, comprado) VALUES (NULL, ?, ?, ?, ?, ?) ", [$usuarioId, $gamekey, $fechaPedido, $tiempoAlquiler, $comprado]);
-    }
-
-    public static function pedidoObtenerPorId(int $id)
-    {
-        $rs = self::ejecutarConsulta("SELECT * FROM pedido WHERE id=?", [$id]);
-        if ($rs) return self::pedidoCrearDesdeRs($rs[0]);
-        else return null;
-    }
 
     /*  PLATAFORMA  */
 
@@ -432,22 +443,79 @@ public static function juegoObtenerPorId(int $id)
 
     public static function aniadirJuegoWishList(int $juegoId, int $usuarioId)
     {
-        $comprobar= self::ejecutarConsulta("SELECT ? FROM wishlist WHERE usuarioId = ?", [$juegoId, $usuarioId]);
+        $comprobar= self::ejecutarConsulta("SELECT juegoId FROM wishlist WHERE usuarioId = ? AND juegoId = ?", [$usuarioId, $juegoId]);
 
-        if($comprobar->rowCount() == 0){
+        if ($comprobar == null) {
+            echo ("sdfds");
             $rs = self::ejecutarActualizacion("INSERT INTO wishlist (juegoId, usuarioId) VALUES (?,?);", [$juegoId, $usuarioId]);   
         }
     }
 
-    public static function borraJuegoWishList(int $juegoId, int $usuarioId)
+    public static function borrarJuegoWishList(int $juegoId, int $usuarioId)
     {
-        $comprobar= self::ejecutarConsulta("SELECT ? FROM wishlist WHERE usuarioId = ?", [$juegoId, $usuarioId]);
+        $comprobar= self::ejecutarConsulta("SELECT juegoId FROM wishlist WHERE usuarioId = ? AND juegoId = ?", [$usuarioId, $juegoId]);
 
-        if($comprobar->rowCount() != 0){
-            $rs = self::ejecutarUpdel("DELETE FROM wishlist WHERE juegoId=? && usuarioId=?;", [$juegoId, $usuarioId]);   
+        if($comprobar){
+            $rs = self::ejecutarActualizacion("DELETE FROM wishlist WHERE juegoId=? && usuarioId=?;", [$juegoId, $usuarioId]);   
         }
     }
 
+
+    /* BUSCAR/FILTRAR */
+
+  public static function buscarJuegoPorNombre(string $nombre): ?array
+  {
+    $cadena = "%" . $nombre . "%";  
+    $juegos = [];
+    
+    $rs = self::ejecutarConsulta(
+          "SELECT * FROM juego WHERE nombre LIKE ?",
+          [$cadena]
+      );
+
+
+      foreach ($rs as $fila) {
+          $juego = self::juegoCrearDesdeRS($fila);
+          array_push($juegos, $juego);
+      }
+
+
+      if ($rs) {
+          return $juegos;
+      } else {
+          return null;
+      }
+  }
+
+/*
+
+  public static function buscarJuegoPorGenero(string $nombre): ?array
+  {
+      $juegos = [];
+      
+      $rs = self::ejecutarConsulta(
+          "SELECT juego.* FROM juego 
+          INNER JOIN genero_juego ON juego.id = genero_juego.juegoId 
+          LEFT JOIN genero ON genero_juego.generoId = genero.id 
+          WHERE genero.nombre LIKE '%'+?+'%'",
+          [$nombre]
+      );
+
+
+      foreach ($rs as $fila) {
+          $juego = self::juegoCrearDesdeRS($fila);
+          array_push($juegos, $juego);
+      }
+
+
+      if ($rs) {
+          return $juegos;
+      } else {
+          return null;
+      }
+  }
+*/
+ 
     /*  RESENIA  */
     
     private static function reseniaCrearDesdeRS(array $resenia): Resenia
@@ -455,82 +523,142 @@ public static function juegoObtenerPorId(int $id)
     return new Resenia($resenia["id"], $resenia["valoracion"], $resenia["mensaje"], $resenia["fecha"], $resenia["juegoId"], $resenia["usuarioId"]);
 }
 
-public static function reseniasObtener(int $id): ?array
-{
+    public static function reseniasObtener(int $id): ?array
+    {
 
-    $resenias = [];
+        $resenias = [];
 
-    $rs = self::ejecutarConsulta(
-        "SELECT * FROM resenia WHERE juegoId = ? ORDER BY fecha ASC",
-        [$id]
-    );
+        $rs = self::ejecutarConsulta(
+            "SELECT * FROM resenia WHERE juegoId = ? ORDER BY fecha ASC",
+            [$id]
+        );
 
-    foreach ($rs as $fila) {
-        $resenia = self::reseniaCrearDesdeRS($fila);
-        array_push($resenias, $resenia);
+        foreach ($rs as $fila) {
+            $resenia = self::reseniaCrearDesdeRS($fila);
+            array_push($resenias, $resenia);
+        }
+
+        if ($rs) {
+            return $resenias;
+        } else {
+            return null;
+        }
     }
 
-    if ($rs) {
-        return $resenias;
-    } else {
-        return null;
+    public static function insertarResenia(int $valoracion, string $mensaje, int $juegoId, int $usuarioId): bool
+    {
+        $fecha = obtenerFecha();
+
+        if ($mensaje != NULL && $mensaje != "") { 
+            self::ejecutarActualizacion("INSERT INTO resenia (valoracion, mensaje, fecha, juegoId, usuarioId) VALUES (?, ?, ?, ?, ?);",
+                [$valoracion, $mensaje, $fecha, $juegoId, $usuarioId]);
+        }
     }
-}
 
-public static function insertarResenia(int $valoracion, string $mensaje, int $juegoId, int $usuarioId): bool
-{
-    $fecha = obtenerFecha();
+    public static function reseniaObtenerUltimaInsertada(): ?Resenia
+    {
+        $rs = self::ejecutarConsulta(
+            "SELECT * FROM resenia WHERE id IN(SELECT MAX(id) FROM resenia)",
+            []
+        );
 
-    if ($mensaje != NULL && $mensaje != "") { 
-        self::ejecutarActualizacion("INSERT INTO resenia (valoracion, mensaje, fecha, juegoId, usuarioId) VALUES (?, ?, ?, ?, ?);",
-            [$valoracion, $mensaje, $fecha, $juegoId, $usuarioId]);
+        if ($rs) return self::reseniaCrearDesdeRs($rs[0]);
+            else return null;
     }
-}
 
-public static function reseniaObtenerUltimaInsertada(): ?Resenia
-{
-    $rs = self::ejecutarConsulta(
-        "SELECT * FROM resenia WHERE id IN(SELECT MAX(id) FROM resenia)",
-        []
-    );
 
-    if ($rs) return self::reseniaCrearDesdeRs($rs[0]);
+/*  PEDIDO  */
+
+    public static function pedidoCrearDesdeRS(array $pedido): Pedido
+    {
+        return new Pedido($pedido["id"], $pedido["usuarioId"], NULL, $pedido["fechaPedido"], $pedido["tiempoAlquiler"], $pedido["comprado"]);
+    }
+
+    public static function pedidoCrear(int $usuarioId): array
+    {
+
+      $rs= self::ejecutarConsulta("SELECT * FROM pedido WHERE usuarioId = ? AND fechaPedido IS NULL", [$usuarioId]);
+
+      if($rs) {
+        return self::carritoObtenerUsuarioId($usuarioId);
+      } else {
+        return self::ejecutarConsulta("INSERT INTO pedido (usuarioId) VALUES (?)", 
+            [$usuarioId]
+        );
+      }
+    }
+
+    public static function pedidoConfirmar(int $pedidoId): Pedido
+    {
+        $fecha = obtenerFecha();
+        $gamekey= generarCadenaAleatoria(12);
+
+      return self::ejecutarActualizacion("UPDATE pedido SET fechaPedido = ?, gamekey = ?  WHERE idPedido=? ",
+         [$fecha, $gamekey, $pedidoId]);
+       
+    }
+
+    public static function pedidoObtenerPorId(int $id)
+    {
+        $rs = self::ejecutarConsulta("SELECT * FROM pedido WHERE id=?", [$id]);
+
+        if ($rs) return self::pedidoCrearDesdeRs($rs[0]);
         else return null;
-}
+    }
+
+    public static function pedidoObtenerPorUsuarioId(int $usuarioId)
+    {
+        $rs = self::ejecutarConsulta("SELECT * FROM pedido WHERE usuarioId=?", [$usuarioId]);
+        
+        if ($rs) return self::pedidoCrearDesdeRS($rs[0]);
+        else return null;
+    }
+
+    public static function pedidoCarritoObtenerPorUsuarioId(int $usuarioId)
+    {
+        $rs = self::ejecutarConsulta("SELECT * FROM pedido WHERE Id = (SELECT MAX(Id) FROM pedido WHERE usuarioId=?)",
+        [$usuarioId]);
+        if ($rs) return self::pedidoCrearDesdeRS($rs[0]);
+        else return null;
+    }
+
 
 /*  CARRITO  */
 
+    private static function carritoCrearDesdeRS(array $fila): Carrito
+    {
+        return new Carrito($fila["pedidoId"], $fila["juegoId"]);
+    }
 
-private static function carritoCrearDesdeRS(array $carrito): Carrito
-{
-    return new Carrito($carrito["pedidoId"], $carrito["juegoId"], $carrito["unidades"]);
-}
 
-public static function carritoAgregarJuego(int $pedidoId, int $juegoId, int $unidades): void
-{
-    /*$comprobar = self::ejecutarConsulta("SELECT * FROM carrito WHERE juegoId= ? AND pedidoId = ?");
+    public static function carritoAgregarJuego(int $pedidoId, int $juegoId): void
+    {
+        $rs = self::ejecutarConsulta(
+            "SELECT * FROM carrito WHERE juegoId= ? AND pedidoId = ?",
+            [$juegoId, $pedidoId]    
+        );
 
-    if($comprobar->rowCount() != 0){*/
-    $pedidoId = self::pedidoObtenerPorId($pedidoId);
-    $unidades += 1;
-    self::ejecutarActualizacion(
-        "INSERT INTO carrito (pedidoId, juegoId, unidades) VALUES (?,?,?) ",
-        [$pedidoId, $juegoId, $unidades]
-    );
-}
+        if (!$rs) {
+            self::ejecutarActualizacion(
+                "INSERT INTO carrito (pedidoId, juegoId) VALUES (?,?) ",
+                [$pedidoId, $juegoId]
+            );
+            
+        }
+    }
 
-public static function carritoObtenerUsuarioId(int $usuarioId): array
+    public static function carritoObtenerUsuarioId(int $usuarioId)
     {
 
         $datos = [];
         $rs = self::ejecutarConsulta(
-            "SELECT * FROM carrito c, pedido p WHERE usuarioId = ? AND c.pedidoId = p.pedidoId AND p.fechaPedido IS current_timestamp()",
+            "SELECT * FROM carrito c, pedido p WHERE usuarioId = ? AND c.pedidoId = p.id AND p.fechaPedido IS NULL",
             [$usuarioId]
         );
-
-        foreach ($rs as $fila) {
-            $juego = self::carritoCrearDesdeRs($fila);
-            array_push($datos, $juego);
+        
+        foreach ($rs as $fila){
+            $carrito= self::carritoCrearDesdeRS($fila);
+            array_push($datos, $carrito);
         }
 
         return $datos;
@@ -563,21 +691,12 @@ public static function carritoObtenerUsuarioId(int $usuarioId): array
        
     }
 
-    public static function carritoEliminar($pedidoId,$juegoId): bool
-    {
-        $return = self::ejecutarActualizacion("DELETE FROM carrito WHERE pedidoId=? AND juegoId=?",
-        [$pedidoId,$juegoId]);
-        
-        if ($return) {
-            return true;
-        } else {
-            return false;
+    public static function carritoEliminar($pedidoId, $juegoId)
+        {
+            self::ejecutarActualizacion(
+                "DELETE from carrito WHERE pedidoId=? AND juegoId=?",
+                [$pedidoId, $juegoId]);
         }
-    }
-
-
-
-
 
 
 

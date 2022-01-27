@@ -31,7 +31,7 @@ class Usuario extends Dato implements JsonSerializable
     private $codigoCookie;
     private $administrador;
 
-    public function __construct($id, $nombre, $apellidos, $email, $indentificador, $contrasenna, $codigoCookie, $administrador)
+    public function __construct($id, $nombre, $apellidos, $email, $indentificador, $contrasenna, $codigoCookie)
     {
         $this->id = ($id);
         $this->setNombre($nombre);
@@ -40,7 +40,6 @@ class Usuario extends Dato implements JsonSerializable
         $this->setIdentificador($indentificador);
         $this->setContrasenna($contrasenna);
         $this->setCodigoCookie($codigoCookie);
-        $this->setAdministrador($administrador);
     }
 
     public function jsonSerialize()
@@ -53,7 +52,6 @@ class Usuario extends Dato implements JsonSerializable
             "identificador" => $this->identificador,
             "contrasenna" => $this->contrasenna,
             "codigoCookie" => $this->codigoCookie,
-            "administrador" => $this->administrador,
         ];
 
     }
@@ -66,13 +64,11 @@ class Usuario extends Dato implements JsonSerializable
     public function getEmail()
     {return $this->email;}
     public function getIdentificador()
-    {return $this->Identificador;}
+    {return $this->identificador;}
     public function getContrasenna()
     {return $this->contrasenna;}
     public function getCodigoCookie()
     {return $this->codigoCookie;}
-    public function getAdministrador()
-    {return $this->administrador;}
 
     /* SETTERS USUARIO */
     public function setNombre($nombre)
@@ -87,8 +83,6 @@ class Usuario extends Dato implements JsonSerializable
     {$this->contrasenna = $contrasenna;}
     public function setCodigoCookie($codigoCookie)
     {$this->codigoCookie = $codigoCookie;}
-    public function setAdministrador($administrador)
-    {$this->administrador = $administrador;}
 }
 
 
@@ -194,6 +188,268 @@ class Juego extends Dato implements JsonSerializable
     public function setPrecio($precio)
     {
         $this->precio = $precio;
+    }
+
+}
+
+
+/* CLASE PLATAFORMA */
+
+class Plataforma extends Dato implements JsonSerializable
+{
+    use Identificable;
+
+    private $nombre;
+
+    private $logo;
+
+    public function __construct($id, $nombre, $logo)
+    {
+        $this->setId($id);
+        $this->setNombre($nombre);
+        $this->setLogo($logo);
+    }
+
+    public function jsonSerialize()
+    {
+        return [
+            "id" => $this->id,
+            "nombre" => $this->nombre,
+            "logo" => $this->logo
+        ];
+    }
+
+
+    public function getNombre() 
+    {
+        return $this->nombre;
+    }
+
+    public function setNombre($nombre)
+    {
+        $this->nombre = $nombre;
+    }
+
+    public function getLogo() 
+    {
+        return $this->logo;
+    }
+
+    public function setLogo($logo)
+    {
+        $this->logo = $logo;
+    }
+}
+
+
+/* CLASE GÉNERO */
+
+class Genero extends Dato implements JsonSerializable
+{
+    use Identificable;
+
+    private $nombre;
+
+    public function __construct($id, $nombre)
+    {
+        $this->setId($id);
+        $this->setNombre($nombre);
+    }
+
+    public function jsonSerialize()
+    {
+        return [
+            "id" => $this->id,
+            "nombre" => $this->nombre,
+        ];
+    }
+
+    public function getNombre()
+    {
+        return $this->nombre;
+    }
+
+    public function setNombre($nombre)
+    {
+        $this->nombre = $nombre;
+    }
+}
+
+
+/* CLASE  RESENIA */
+
+class Resenia extends Dato implements JsonSerializable
+{
+    use Identificable;
+
+    private $valoracion;
+
+    private $mensaje;
+
+    private $fecha;
+
+    private $juegoId;
+
+    private $usuarioId;
+
+    public function __construct($valoracion, $id, $mensaje, $fecha, $juegoId, $usuarioId)
+    {
+        $this->setId($id);
+        $this->setValoracion($valoracion);
+        $this->setMensaje($mensaje);
+        $this->setFecha($fecha);
+        $this->setJuegoId($juegoId);
+        $this->setUsuarioId($usuarioId);
+    }
+
+    public function jsonSerialize()
+    {
+        return [
+            "id" => $this->id,
+            "valoracion" => $this->valoracion,
+            "mensaje" => $this->mensaje,
+            "fecha" => $this->fecha,
+            "juegoId" => $this->juegoId,
+            "usuarioId" => $this->usuarioId,
+        ];
+    }
+
+    
+    public function getValoracion()
+    {
+        return $this->valoracion;
+    }
+
+    public function setValoracion($valoracion)
+    {
+        $this->valoracion = $valoracion;
+    }
+
+    public function getMensaje()
+    {
+        return $this->mensaje;
+    }
+
+    public function setMensaje($mensaje)
+    {
+        $this->mensaje = $mensaje;
+    }
+
+    public function getFecha()
+    {
+        return $this->fecha;
+    }
+
+    public function setFecha($fecha)
+    {
+        $this->fecha = $fecha;
+    }
+
+    public function getJuegoId()
+    {
+        return $this->juegoId;
+    }
+
+    public function setJuegoId($juegoId)
+    {
+        $this->juegoId = $juegoId;
+    }
+
+    public function getUsuarioId()
+    {
+        return $this->usuarioId;
+    }
+
+    public function setUsuarioId($usuarioId)
+    {
+        $this->usuarioId = $usuarioId;
+    }
+}
+
+class Carrito extends Dato
+{
+    use Identificable;
+    private  $pedidoId;
+    private  $juegoId;
+
+    public function __construct(int $pedidoId, int $juegoId)
+    {
+        $this->setPedidoId($pedidoId);
+        $this->setJuegoId($juegoId);
+    }
+
+    public function getJuegoId(){
+        return $this->juegoId;
+    }
+    public function getPedidoId(){
+        return $this->pedidoId;
+    }
+    public function setJuegoId($juegoId){
+        $this->juegoId = $juegoId;
+    }
+    public function setPedidoId($pedidoId){
+        $this->pedidoId = $pedidoId;
+    }
+    
+}
+
+class Pedido extends Carrito {
+
+    use Identificable;
+    private $gameKey;
+    private $fechaPedido;
+    private $tiempoAlquiler;
+    private $comprado;
+
+    public function __constructEquipo(int $id, int $usuarioId, string $gameKey, string $fechaPedido, int $tiempoAlquiler, int $comprado)
+    {
+        parent::__construct($usuarioId, $lineas);
+
+        $this->setId($id);
+        $this->setGameKey($gameKey);
+        $this->setFechaPedido($fechaPedido);
+        $this->setTiempoAlquiler($tiempoAlquiler);
+        $this->setComprado($comprado);
+    }
+
+    public function getGameKey()
+    {
+        return $this->gameKey;
+    }
+
+    public function setGameKey($gameKey)
+    {
+        $this->gameKey = $gameKey;
+    }
+
+    public function getFechaPedido()
+    {
+        return $this->fechaPedido;
+    }
+
+    public function setFechaPedido($fechaPedido)
+    {
+        $this->fechaPedido = $fechaPedido;
+    }
+
+    public function getTiempoAlquiler()
+    {
+        return $this->tiempoAlquiler;
+    }
+
+    public function setTiempoAlquiler($tiempoAlquiler)
+    {
+        $this->tiempoAlquiler = $tiempoAlquiler;
+    }
+
+    public function getComprado()
+    {
+        return $this->comprado;
+    }
+
+    public function setComprado($comprado)
+    {
+        $this->comprado = $comprado;
     }
 
 }
