@@ -611,6 +611,14 @@ public static function juegoObtenerPorId(int $id)
     }
 
 
+    public static function reseniaObtenerPorId($reseniaId) 
+    {
+        $rs = self::ejecutarConsulta("SELECT * FROM resenia WHERE id=?", [$reseniaId]);
+
+        if ($rs) return self::reseniaCrearDesdeRS($rs[0]);
+        else return null;
+    }
+
 /*  PEDIDO  */
 
     private static function pedidoCrearDesdeRS(array $pedido): Pedido

@@ -408,7 +408,7 @@ function domCrearJuego(juego) {
         numTotal.innerHTML = nTotal;
 
         pTotal += precio;
-        precioTotal.innerHTML = pTotal + "€";
+        precioTotal.innerHTML = pTotal.toFixed(2) + "€";
 
         btnBorrar.appendChild(i);
 
@@ -470,7 +470,7 @@ function domCrearJuego(juego) {
 
         var spanNTotal = document.createElement("span");
         spanNTotal.setAttribute("class", "ticket-Precio");
-        spanNTotal.innerHTML = pTotal+"€";
+        spanNTotal.innerHTML = pTotal.toFixed(2)+"€";
 
         liItem.appendChild(spanTotal);
         liItem.appendChild(spanNTotal);

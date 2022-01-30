@@ -16,8 +16,6 @@ var pTotal = 0;
 var nTotal = 0;
 var cartOpen = false;
 var valoracion = 0;
-var usuarioNombre;
-var usuarioApellidos;
 
 
 // ---------- MANEJADORES DE EVENTOS / COMUNICACIÓN CON PHP ----------
@@ -28,7 +26,6 @@ function inicializar() {
     obtenerJuego(juegoId);
     obtenerGenero(juegoId);
     obtenerPlataforma(juegoId);
-    obtenerUsuario();
     obtenerResenias(juegoId);
 
     infoPelicula = document.getElementById("infoPelicula");
@@ -189,7 +186,7 @@ function obtenerResenias(juegoId) {
 
             if(resenias != null) {
                 for (var i=0; i<resenias.length; i++) {
-                    domCrearResenia(resenias[i], usuarioNombre, usuarioApellidos);
+                   obtenerUsuarioResenia(resenias[i]);
                 }
             }
         },
@@ -209,7 +206,7 @@ function insertarResenia() {
             document.getElementById("insertarResenia").value = ""; //vaciamos 
             valoracion = 0;
 
-            domCrearResenia(resenia, usuarioNombre, usuarioApellidos);
+            obtenerUsuarioResenia(resenia);
             
         },
         function(texto) {
@@ -218,13 +215,12 @@ function insertarResenia() {
     );
 }
 
-function obtenerUsuario(){
-    llamadaAjax("../_php/UsuarioObtener.php","",
+function obtenerUsuarioResenia(resenia){
+    llamadaAjax("../_php/ReseniaObtenerUsuario.php","reseniaId=" + parseInt(resenia.id),
     function(texto) {
         var usuario = JSON.parse(texto);
         
-        usuarioNombre = usuario.nombre;
-        usuarioApellidos = usuario.apellidos;
+        domCrearResenia(resenia, usuario);
 
     }, function (texto){
         notificarUsuario("Error Ajax al obtener usuario: " + texto);
@@ -257,18 +253,18 @@ function domCrearJuego(juego) {
     document.getElementById("trailer").appendChild(trailer);
     
 
-    }
+}
 
-    function rellenarGenero(nombre){
+function rellenarGenero(nombre){
 
         var span = document.createElement("span");
         span.innerHTML = nombre+'  ';
 
         document.getElementById("genero").appendChild(span);
 
-    }
+}
 
-    function rellenarPlataforma(id){
+function rellenarPlataforma(id){
 
         var btnPlataforma = obtenerInfoPlataforma(id, "btn");
         var iPlataforma = obtenerInfoPlataforma(id, "i");
@@ -284,9 +280,9 @@ function domCrearJuego(juego) {
 
         document.getElementById("plataforma").appendChild(btn);
 
-    }
+}
 
-    function domCrearResenia(resenia, usuarioNombre, usuarioApellidos){
+    function domCrearResenia(resenia, usuario){
 
         var divMensaje = document.createElement("div");
         divMensaje.setAttribute("class", "divInsertarResenia");
@@ -318,11 +314,14 @@ function domCrearJuego(juego) {
 
         var nombre = document.createElement("span");
         nombre.setAttribute("class", "datos");
-        nombre.innerHTML = usuarioNombre;
+        nombre.innerHTML = usuario.nombre+" ";
 
         var apellidos = document.createElement("span");
         apellidos.setAttribute("class", "datos");
-        apellidos.innerHTML = usuarioApellidos;
+        apellidos.innerHTML = usuario.apellidos;
+
+        var br1 = document.createElement("br");
+        var br2 = document.createElement("br");
 
         divDate.appendChild(date);
 
@@ -335,7 +334,9 @@ function domCrearJuego(juego) {
         divDatosBottom.appendChild(divDate);
 
         divMensaje2.appendChild(divDatosTop);
+        divMensaje2.appendChild(br1);
         divMensaje2.appendChild(pMensaje);
+        divMensaje2.appendChild(br2);
         divMensaje2.appendChild(divDatosBottom);
 
         divMensaje.appendChild(divMensaje2);

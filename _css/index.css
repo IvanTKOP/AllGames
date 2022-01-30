@@ -92,47 +92,47 @@ nav button {
 }
 
 .form-control {
-  background-color: #650072;
-  border: 1px solid #1b2b2f;
-  color: #000000;
+  background-color: #b313ab;
+  border: 1px solid #2260db;
+  color: #2260db;
   height: 42px;
 }
 
 .form-control::-webkit-input-placeholder {
-  color: #0011ff;
+  color: #4e0058;
   height: 42px;
 }
 
 .form-control:-ms-input-placeholder {
-  color: #0011ff;
+  color: #4e0058;
   height: 42px;
 }
 
 .form-control::-ms-input-placeholder {
-  color: #0011ff;
+  color: #4e0058;
   height: 42px;
 }
 
 .form-control::placeholder {
-  color: #0011ff;
+  color: #4e0058;
   height: 42px;
 }
 
 .form-control:hover {
-  background-color: #49b6ff;
-  border: 1px solid #0011ff;
+  background-color: #4e0058;
+  border: 1px solid #2260db;
   height: 42px;
 }
 
 .form-control:active {
-  background-color: #49b6ff;
-  border: 1px solid #0011ff;
+  background-color: #8e03a0;
+  border: 1px solid #2260db;
   height: 42px;
 }
 
 .form-control:focus {
-  background-color: #49b6ff;
-  border: 1px solid #0011ff;
+  background-color: #8e03a0;
+  border: 1px solid #2260db;
   height: 42px;
 }
 
@@ -147,20 +147,17 @@ a:hover {
 }
 
 #btnBuscar {
-  color: #9200f3;
+  color: #b313ab;
+  border-color: #2260db;
 }
 
 #btnBuscar:hover {
-  color: #ee14ad;
+  color: #4e0058;
+  background-color: #2260db;
 }
 
-#btnGeneros {
-  font-size: 0.8em;
-  color: #9200f3;
-}
-
-#btnGeneros:hover {
-  color: #ee14ad;
+.btnPlataforma {
+  width: 100%;
 }
 
 .container-fluid {
@@ -172,6 +169,7 @@ a:hover {
   max-width: fit-content;
   display: flex;
   flex-direction: column;
+  justify-content: center;
 }
 
 @media (min-width: 600px) {
@@ -187,7 +185,7 @@ a:hover {
 }
 
 .main-color-text {
-  color: #6394f8;
+  color: #2260db;
 }
 
 .containerCart {
@@ -196,7 +194,7 @@ a:hover {
 }
 
 .badge {
-  background-color: #6394f8;
+  background-color: #b313ab;
   border-radius: 10px;
   color: white;
   display: inline-block;
@@ -218,7 +216,7 @@ a:hover {
   z-index: 3;
   border-radius: 3px;
   padding: 1em;
-  top: 2.5em;
+  top: 7.2em;
 }
 
 .shopping-cart-header {
@@ -252,7 +250,7 @@ a:hover {
 }
 
 .item-price {
-  color: #6394f8;
+  color: #2260db;
   margin-right: 8px;
 }
 
@@ -269,7 +267,7 @@ a:hover {
   width: 0;
   position: absolute;
   pointer-events: none;
-  border-bottom-color: white;
+  border-bottom-color: #2260db;
   border-width: 8px;
   margin-left: -8px;
 }
@@ -282,7 +280,7 @@ a:hover {
 }
 
 .button {
-  background: #6394f8;
+  background: #b313ab;
   color: white;
   text-align: center;
   padding: 12px;
@@ -293,8 +291,9 @@ a:hover {
   margin: 25px 0 15px 0;
 }
 
-.button:hover {
-  background: lighten(#6394f8, 3%);
+.button a:hover {
+  background: lighten(#ff49e7, 3%);
+  color: #ff49e7;
 }
 
 .clearfix:after {
@@ -306,11 +305,11 @@ a:hover {
 
 .cart {
   position: absolute;
-  top: 17px;
   right: 60px;
   width: 50px;
   height: 50px;
-  background: #292d48;
+  background: transparent;
+  border: 1px solid #2260db;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -318,7 +317,7 @@ a:hover {
 }
 .cartIcon {
   font-size: 25px;
-  color: white;
+  color: #b313ab;
 }
 
 .cart:before {
@@ -328,12 +327,12 @@ a:hover {
   position: absolute;
   top: -12px;
   right: -12px;
-  background: #2bd156;
+  background: #b313ab;
   line-height: 24px;
   padding: 0 5px;
   height: 24px;
   min-width: 24px;
-  color: white;
+  color: #2260db;
   text-align: center;
   border-radius: 24px;
 }
@@ -342,7 +341,8 @@ a:hover {
   box-shadow: 0px 15px 35px -5px rgba(50, 88, 130, 0.32);
   border-radius: 15px;
   transition: transform 0.2s;
-  margin-right: 20px;
+  margin-right: 1em;
+  margin-bottom: 1em;
 }
 
 .card-body {
@@ -419,6 +419,7 @@ a:hover {
   justify-content: center;
   font-size: 18px;
   margin: 12px;
+  margin-bottom: -1em;
 }
 #toast.show {
   visibility: visible;
@@ -551,14 +552,14 @@ a:hover {
 }
 
 .ticket-LogoDiv {
-  flex: 1 0 40%;
+  flex: 1 0 50%;
+  margin-right: 2.2em;
 }
 
 .ticket-Logo {
   display: block;
-  width: 50px;
+  width: 100%;
   height: auto;
-  margin-left: 15px;
 }
 
 .ticket-Info {
@@ -688,4 +689,16 @@ a:hover {
   font-style: oblique;
   color: #989898;
   margin-right: 0.7rem;
+}
+
+.pagina {
+  justify-content: center;
+}
+
+a {
+  color: #2260db;
+}
+
+a:hover {
+  color: #b313ab;
 }

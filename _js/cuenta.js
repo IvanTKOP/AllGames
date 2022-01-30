@@ -208,7 +208,7 @@ function domCrearPerfil(usuario){
     divRow2.setAttribute("class", "row");
 
     var divButton = document.createElement("div");
-    divButton.setAttribute("clas", "col-sm-6 col-sm-offset-3");
+    divButton.setAttribute("class", "col-sm-6 col-sm-offset-3");
 
     var divForm4 = document.createElement("div");
     divForm4.setAttribute("class", "form-group");
@@ -243,7 +243,7 @@ function domCrearPerfil(usuario){
         actualizarUsuario(identificador, email, contrasenna);
         }
     })  
-    btnGuardar.setAttribute("class", "form-control btn btn-login");      
+    btnGuardar.setAttribute("class", "form-control btn btn-register");      
     btnGuardar.innerHTML ="Guardar Cambios";
 
     divButton.appendChild(btnGuardar);
@@ -355,7 +355,7 @@ function domCrearTicketItem(juegoCarrito, lastItem) {
     imgPortada.setAttribute("src", "../_img/"+juegoCarrito.portada + " ");
     imgPortada.setAttribute("width", "40px");
     imgPortada.setAttribute("height", "55px");
-    imgPortada.setAttribute("style", "margin-right: 10px;")
+    imgPortada.setAttribute("style", "margin-right: 10px;border-radius: 5px;")
 
     
     var spanNombre = document.createElement("span");
@@ -390,7 +390,7 @@ function domCrearTicketTotal(pTotal) {
 
     var spanNTotal = document.createElement("span");
     spanNTotal.setAttribute("class", "ticket-Precio");
-    spanNTotal.innerHTML = pTotal+"€";
+    spanNTotal.innerHTML = pTotal.toFixed(2)+"€";
 
     liItem.appendChild(spanTotal);
     liItem.appendChild(spanNTotal);
