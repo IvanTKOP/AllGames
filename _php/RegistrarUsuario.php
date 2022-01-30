@@ -9,11 +9,11 @@ $arrayUsuario["identificador"] = $_REQUEST["identificador"];
 $arrayUsuario["email"] = $_REQUEST["email"];
 $arrayUsuario["contrasenna"] = $_REQUEST["contrasenna"];
 
+// comprobamos si identificador esta disponible
+$usuarioEncontrado = DAO::usuarioComprobarDisponible($arrayUsuario["identificador"]);
 
-$usuarioDisponible = DAO::usuarioComprobarDisponible($arrayUsuario["identificador"]);
-
-if (!$usuarioDisponible) {
-    $usuarioCreado= DAO::usuarioCrear($arrayUsuario);
+if (!$usuarioEncontrado) {
+    DAO::usuarioCrear($arrayUsuario);
     $resultado = true;
     
 } else {

@@ -11,36 +11,6 @@ window.onload = inicializar;
 var formulario;
 
 
-// ---------- FUNCIONES GENERALES ----------
-
-function notificarUsuario(texto) {
-    alert(texto);
-}
-
-function llamadaAjax(url, parametros, manejadorOK, manejadorError) {
-    var request = new XMLHttpRequest();
-
-    request.open("POST", url);
-    request.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
-
-    request.onreadystatechange = function() {
-        if (this.readyState == 4) {
-            if (request.status == 200) {
-                manejadorOK(request.responseText);
-            } else {
-                if (manejadorError != null) manejadorError(request.responseText);
-            }
-        }
-    };
-
-    request.send(parametros);
-}
-
-function objetoAParametrosParaRequest(objeto) {
-    // Esto convierte un objeto JS en un listado de clave1=valor1&clave2=valor2&clave3=valor3
-    return new URLSearchParams(objeto).toString();
-}
-
 // ---------- MANEJADORES DE EVENTOS / COMUNICACIÓN CON PHP ----------
 
 function inicializar() {
@@ -252,7 +222,7 @@ function registrarUsuario(nombre, apellidos, identificador, email, contrasenna){
         btnRegister.addEventListener("click", function(){
             var correcto = comprobarContrasenna(contrasenna.value, contrasenna2.value);
             if(correcto){
-            registrarUsuario(nombre, apellidos, identificador, email, contrasenna, contrasenna2);
+            registrarUsuario(nombre, apellidos, identificador, email, contrasenna);
             }
         })  
         btnRegister.setAttribute("class", "form-control btn btn-register");      

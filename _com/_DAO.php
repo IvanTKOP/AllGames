@@ -95,7 +95,7 @@ public static function usuarioObtenerPorId(int $id): ?Usuario
 {
     $rs = self::ejecutarConsulta("SELECT * FROM usuario WHERE id=?", [$id]);
     if ($rs) {
-        return self::usuarioCrearDesdeRs($rs);
+        return self::usuarioCrearDesdeRs($rs[0]);
     } else {
         return null;
     }
@@ -153,6 +153,13 @@ public static function usuarioBorrar(): void
         [$_SESSION["id"]]
     );
 
+}
+
+public static function usuarioActualizar(array $arrayUsuario): void
+{
+    $hash_contrasenna= password_hash($arrayUsuario["contrasenna"], PASSWORD_DEFAULT);
+
+    self::ejecutarActualizacion("UPDATE usuario SET identificador = ?, email = ?, contrasenna = ? WHERE id=?",[$arrayUsuario["identificador"], $arrayUsuario["email"], $hash_contrasenna, $arrayUsuario["id"]]);
 }
 
 public static function usuarioComprobarAdministrador(int $id)
@@ -347,32 +354,17 @@ public static function juegoObtenerPorId(int $id)
             [$id]);
     }
 
-    public static function juegosObtenerWishList(int $usuarioId): ?array
-    {
-        $juegos = [];
-        $rs = self::ejecutarConsulta(
-            "SELECT juegoId FROM wishlist 
-            WHERE usuarioId LIKE ?",
-            [$usuarioId]
-        );
-
-        if (!$rs) {
-            return null;
-        }
-
-        foreach ($rs as $fila) {    
-            $juego = self::juegoObtenerPorId($fila["juegoId"]);
-            array_push($juegos, $juego);
-        }
-
-        return $juegos;
-    }
-
+    
     /* GENERO */
 
     private static function generoCrearDesdeRs(array $fila): Genero
     {
         return new Genero($fila["id"], $fila["nombre"]);
+    }
+
+    private static function genero_JuegoCrearDesdeRs(array $fila): Genero_Juego
+    {
+        return new Genero_Juego($fila["generoId"], $fila["juegoId"]);
     }
 
     public static function generoObtenerPorId(int $id)
@@ -395,12 +387,47 @@ public static function juegoObtenerPorId(int $id)
         return $datos;
     }
 
+    public static function generoObtenerPorJuegoId($juegoId)
+  {
+      $datos = [];
+      
+      $rs = self::ejecutarConsulta(
+          "SELECT * FROM genero_juego g, juego j WHERE juegoId = ? AND g.juegoId = j.id",
+          [$juegoId]
+      );
+
+
+      foreach ($rs as $fila) {
+          $genero = self::genero_JuegoCrearDesdeRs($fila);
+          array_push($datos, $genero);
+      }
+
+
+      if ($rs) {
+          return $datos;
+      } else {
+          return null;
+      }
+  }
+
 
     /*  PLATAFORMA  */
 
     private static function plataformaCrearDesdeRS(array $plataforma): Plataforma
     {
         return new Plataforma($plataforma["id"], $plataforma["nombre"], $plataforma["logo"]);
+    }
+
+    private static function plataforma_JuegoCrearDesdeRS(array $plataforma): Plataforma_Juego
+    {
+        return new Plataforma_Juego($plataforma["plataformaId"], $plataforma["juegoId"]);
+    }
+
+    public static function plataformaObtenerPorId(int $id)
+    {
+        $rs = self::ejecutarConsulta("SELECT * FROM plataforma WHERE id=?", [$id]);
+        if ($rs) return self::plataformaCrearDesdeRs($rs[0]);
+        else return null;
     }
 
     public static function plataformaObtenerPorNombre(string $nombre): ?Plataforma
@@ -413,27 +440,24 @@ public static function juegoObtenerPorId(int $id)
         else return null;
     }
 
-    public static function plataformaObtenerPorJuegoId(int $id): ?array
+    public static function plataformaObtenerPorJuegoId($juegoId)
     {
-
-        $plataformas = [];
-
+        $datos = [];
+        
         $rs = self::ejecutarConsulta(
-            "SELECT plataforma.* FROM plataforma 
-            INNER JOIN plataforma_juego ON plataforma.id = plataforma_juego.plataformaId 
-            LEFT JOIN juego ON plataforma_juego.juegoId = juego.id 
-            WHERE juego.id = ?",
-            [$id]
+            "SELECT * FROM plataforma_juego p, juego j WHERE juegoId = ? AND p.juegoId = j.id",
+            [$juegoId]
         );
-
+  
+  
         foreach ($rs as $fila) {
-            $plataforma = self::plataformaCrearDesdeRS($fila);
-            array_push($plataformas, $plataforma);
+            $plataforma = self::plataforma_JuegoCrearDesdeRs($fila);
+            array_push($datos, $plataforma);
         }
-
-
+  
+  
         if ($rs) {
-            return $plataformas;
+            return $datos;
         } else {
             return null;
         }
@@ -446,7 +470,6 @@ public static function juegoObtenerPorId(int $id)
         $comprobar= self::ejecutarConsulta("SELECT juegoId FROM wishlist WHERE usuarioId = ? AND juegoId = ?", [$usuarioId, $juegoId]);
 
         if ($comprobar == null) {
-            echo ("sdfds");
             $rs = self::ejecutarActualizacion("INSERT INTO wishlist (juegoId, usuarioId) VALUES (?,?);", [$juegoId, $usuarioId]);   
         }
     }
@@ -457,6 +480,25 @@ public static function juegoObtenerPorId(int $id)
 
         if($comprobar){
             $rs = self::ejecutarActualizacion("DELETE FROM wishlist WHERE juegoId=? && usuarioId=?;", [$juegoId, $usuarioId]);   
+        }
+    }
+
+    public static function obtenerWishList(int $usuarioId): ?array
+    {
+        $juegos = [];
+
+        $rs = self::ejecutarConsulta("SELECT juegoId FROM wishlist WHERE usuarioId = ?",
+        [$usuarioId]);
+
+        if ($rs) {
+            foreach ($rs as $fila) {    
+                $juego = self::juegoObtenerPorId($fila["juegoId"]);
+                array_push($juegos, $juego);
+            }
+
+            return $juegos;
+        }else {
+            return null;
         }
     }
 
@@ -523,14 +565,14 @@ public static function juegoObtenerPorId(int $id)
     return new Resenia($resenia["id"], $resenia["valoracion"], $resenia["mensaje"], $resenia["fecha"], $resenia["juegoId"], $resenia["usuarioId"]);
 }
 
-    public static function reseniasObtener(int $id): ?array
+    public static function reseniasObtenerPorJuegoId($juegoId)
     {
 
         $resenias = [];
 
         $rs = self::ejecutarConsulta(
             "SELECT * FROM resenia WHERE juegoId = ? ORDER BY fecha ASC",
-            [$id]
+            [$juegoId]
         );
 
         foreach ($rs as $fila) {
@@ -545,7 +587,7 @@ public static function juegoObtenerPorId(int $id)
         }
     }
 
-    public static function insertarResenia(int $valoracion, string $mensaje, int $juegoId, int $usuarioId): bool
+    public static function insertarResenia(int $valoracion, string $mensaje, int $juegoId, int $usuarioId)
     {
         $fecha = obtenerFecha();
 
@@ -553,9 +595,11 @@ public static function juegoObtenerPorId(int $id)
             self::ejecutarActualizacion("INSERT INTO resenia (valoracion, mensaje, fecha, juegoId, usuarioId) VALUES (?, ?, ?, ?, ?);",
                 [$valoracion, $mensaje, $fecha, $juegoId, $usuarioId]);
         }
+
+
     }
 
-    public static function reseniaObtenerUltimaInsertada(): ?Resenia
+    public static function reseniaObtenerUltimaInsertada()
     {
         $rs = self::ejecutarConsulta(
             "SELECT * FROM resenia WHERE id IN(SELECT MAX(id) FROM resenia)",
@@ -569,9 +613,10 @@ public static function juegoObtenerPorId(int $id)
 
 /*  PEDIDO  */
 
-    public static function pedidoCrearDesdeRS(array $pedido): Pedido
+    private static function pedidoCrearDesdeRS(array $pedido): Pedido
     {
-        return new Pedido($pedido["id"], $pedido["usuarioId"], NULL, $pedido["fechaPedido"], $pedido["tiempoAlquiler"], $pedido["comprado"]);
+       
+        return new Pedido($pedido["id"], $pedido["usuarioId"], $pedido["gameKey"], $pedido["fechaPedido"], $pedido["tiempoAlquiler"], $pedido["comprado"]);
     }
 
     public static function pedidoCrear(int $usuarioId): array
@@ -582,19 +627,20 @@ public static function juegoObtenerPorId(int $id)
       if($rs) {
         return self::carritoObtenerUsuarioId($usuarioId);
       } else {
-        return self::ejecutarConsulta("INSERT INTO pedido (usuarioId) VALUES (?)", 
+        return self::ejecutarConsulta("INSERT INTO pedido (usuarioId, gamekey, fechaPedido, tiempoAlquiler, comprado) VALUES (?,'0', NULL , 0, 0)", 
             [$usuarioId]
         );
       }
     }
 
-    public static function pedidoConfirmar(int $pedidoId): Pedido
+    public static function pedidoConfirmar(int $pedidoId)
     {
         $fecha = obtenerFecha();
         $gamekey= generarCadenaAleatoria(12);
 
-      return self::ejecutarActualizacion("UPDATE pedido SET fechaPedido = ?, gamekey = ?  WHERE idPedido=? ",
+       self::ejecutarActualizacion("UPDATE pedido SET fechaPedido = ?, gamekey = ?  WHERE id=? ",
          [$fecha, $gamekey, $pedidoId]);
+
        
     }
 
@@ -602,22 +648,33 @@ public static function juegoObtenerPorId(int $id)
     {
         $rs = self::ejecutarConsulta("SELECT * FROM pedido WHERE id=?", [$id]);
 
-        if ($rs) return self::pedidoCrearDesdeRs($rs[0]);
+        if ($rs) return self::pedidoCrearDesdeRS($rs[0]);
         else return null;
     }
 
     public static function pedidoObtenerPorUsuarioId(int $usuarioId)
     {
-        $rs = self::ejecutarConsulta("SELECT * FROM pedido WHERE usuarioId=?", [$usuarioId]);
+        $datos = [];
+        $rs = self::ejecutarConsulta("SELECT * FROM pedido WHERE usuarioId=? AND fechaPedido IS NOT NULL", [$usuarioId]);
         
-        if ($rs) return self::pedidoCrearDesdeRS($rs[0]);
-        else return null;
+        if ($rs){
+            foreach ($rs as $fila){
+                $pedido= self::pedidoCrearDesdeRS($fila);
+                array_push($datos, $pedido);
+            }
+    
+         return $datos;
+        
+        } else{
+            return null;
+        }
     }
 
     public static function pedidoCarritoObtenerPorUsuarioId(int $usuarioId)
     {
         $rs = self::ejecutarConsulta("SELECT * FROM pedido WHERE Id = (SELECT MAX(Id) FROM pedido WHERE usuarioId=?)",
         [$usuarioId]);
+      
         if ($rs) return self::pedidoCrearDesdeRS($rs[0]);
         else return null;
     }
@@ -664,33 +721,6 @@ public static function juegoObtenerPorId(int $id)
         return $datos;
     }
 
-    public static function carritoObtenerJuego(int $juegoId): string
-    {
-        $rs = self::ejecutarConsulta(
-            "SELECT id FROM juego WHERE juegoId=?",
-            [$juegoId]
-        );
-        return $rs[0]["id"];
-    }
-
-    public static function carritoObtenerPrecio(int $juegoId): string
-    {
-        $rs = self::ejecutarConsulta(
-            "SELECT precio FROM juego WHERE juegoId=?",
-            [$juegoId]
-        );
-        return $rs[0]["precio"];
-    }
-
-    public static function carritoModificarUnidades(int $unidades, int $juegoId): string
-    {
-        return $rs = self::ejecutarActualizacion(
-            "UPDATE carrito SET unidades = ? WHERE juegoId=?",
-            [$unidades,$juegoId]
-         );
-       
-    }
-
     public static function carritoEliminar($pedidoId, $juegoId)
         {
             self::ejecutarActualizacion(
@@ -698,8 +728,26 @@ public static function juegoObtenerPorId(int $id)
                 [$pedidoId, $juegoId]);
         }
 
+    public static function carritoObtenerPorPedidoId($pedidoId)
+    {
+        $datos = [];
+        $rs = self::ejecutarConsulta("SELECT * FROM carrito c,pedido p WHERE c.pedidoId = ? 
+                                        AND c.pedidoId = p.id",
+            [$pedidoId]
+        );
 
+        if($rs){
+            foreach ($rs as $fila) {
+                $carrito = self::carritoCrearDesdeRS($fila);
+                array_push($datos, $carrito);
+            }
+        
+            return $datos;
+        } else {
 
+            return null;
+        }
+    }
 
 
 

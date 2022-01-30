@@ -241,6 +241,80 @@ class Plataforma extends Dato implements JsonSerializable
     }
 }
 
+/* CLASE PLATAFORMA_JUEGO */
+
+class Plataforma_Juego extends Dato implements JsonSerializable
+{
+    use Identificable;
+    private  $plataformaId;
+    private  $juegoId;
+
+    public function __construct(int $plataformaId, int $juegoId)
+    {
+        $this->setPlataformaId($plataformaId);
+        $this->setJuegoId($juegoId);
+    }
+
+    public function jsonSerialize()
+    {
+        return [
+            "plataformaId" => $this->plataformaId,
+            "juegoId" => $this->juegoId,
+        ];
+    }
+
+    public function getJuegoId(){
+        return $this->juegoId;
+    }
+    public function getPlataformaId(){
+        return $this->plataformaId;
+    }
+    public function setJuegoId($juegoId){
+        $this->juegoId = $juegoId;
+    }
+    public function setPlataformaId($plataformaId){
+        $this->plataformaId = $plataformaId;
+    }
+    
+}
+
+/* CLASE GENERO_JUEGO */
+
+class Genero_Juego extends Dato implements JsonSerializable
+{
+    use Identificable;
+    private  $generoId;
+    private  $juegoId;
+
+    public function __construct(int $generoId, int $juegoId)
+    {
+        $this->setGeneroId($generoId);
+        $this->setJuegoId($juegoId);
+    }
+
+    public function jsonSerialize()
+    {
+        return [
+            "generoId" => $this->generoId,
+            "juegoId" => $this->juegoId,
+        ];
+    }
+
+    public function getJuegoId(){
+        return $this->juegoId;
+    }
+    public function getGeneroId(){
+        return $this->generoId;
+    }
+    public function setJuegoId($juegoId){
+        $this->juegoId = $juegoId;
+    }
+    public function setGeneroId($generoId){
+        $this->generoId = $generoId;
+    }
+    
+}
+
 
 /* CLASE GÉNERO */
 
@@ -292,7 +366,7 @@ class Resenia extends Dato implements JsonSerializable
 
     private $usuarioId;
 
-    public function __construct($valoracion, $id, $mensaje, $fecha, $juegoId, $usuarioId)
+    public function __construct($id, $valoracion, $mensaje, $fecha, $juegoId, $usuarioId)
     {
         $this->setId($id);
         $this->setValoracion($valoracion);
@@ -366,7 +440,7 @@ class Resenia extends Dato implements JsonSerializable
     }
 }
 
-class Carrito extends Dato
+class Carrito extends Dato implements JsonSerializable
 {
     use Identificable;
     private  $pedidoId;
@@ -376,6 +450,14 @@ class Carrito extends Dato
     {
         $this->setPedidoId($pedidoId);
         $this->setJuegoId($juegoId);
+    }
+
+    public function jsonSerialize()
+    {
+        return [
+            "pedidoId" => $this->pedidoId,
+            "juegoId" => $this->juegoId,
+        ];
     }
 
     public function getJuegoId(){
@@ -393,23 +475,33 @@ class Carrito extends Dato
     
 }
 
-class Pedido extends Carrito {
-
-    use Identificable;
+class Pedido extends Carrito implements JsonSerializable {
     private $gameKey;
+    private $usuarioId;
     private $fechaPedido;
     private $tiempoAlquiler;
     private $comprado;
 
-    public function __constructEquipo(int $id, int $usuarioId, string $gameKey, string $fechaPedido, int $tiempoAlquiler, int $comprado)
+    public function __construct(int $id, int $usuarioId, ?string $gameKey, ?string $fechaPedido, int $tiempoAlquiler, int $comprado)
     {
-        parent::__construct($usuarioId, $lineas);
 
         $this->setId($id);
         $this->setGameKey($gameKey);
         $this->setFechaPedido($fechaPedido);
         $this->setTiempoAlquiler($tiempoAlquiler);
         $this->setComprado($comprado);
+    }
+
+    public function jsonSerialize()
+    {
+        return [
+            "id" => $this->id,
+            "usuarioId" => $this->usuarioId,
+            "gameKey" => $this->gameKey,
+            "fechaPedido" => $this->fechaPedido,
+            "tiempoAlquiler" => $this->tiempoAlquiler,
+            "comprado" => $this->comprado,
+        ];
     }
 
     public function getGameKey()

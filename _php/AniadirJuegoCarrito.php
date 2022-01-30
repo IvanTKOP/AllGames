@@ -16,7 +16,7 @@ foreach ($carrito as $fila) { // buscamos si esta el juego
 
 if ($encontrado == false) { // El juego es nuevo y hay que meterlo al carrito
     $pedido = DAO::pedidoCarritoObtenerPorUsuarioId($_SESSION["id"]);
-    DAO::carritoAgregarJuego($pedido->getPedidoId(), $juegoId); 
+    DAO::carritoAgregarJuego($pedido->getId(), $juegoId); 
     $juego = DAO::juegoObtenerPorId($juegoId);
     echo json_encode($juego);
 }

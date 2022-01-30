@@ -136,18 +136,6 @@ nav button {
   height: 42px;
 }
 
-.fas.fa-bars {
-  font-size: 2em;
-  max-width: fit-content;
-  align-self: center;
-}
-
-.fas.fa-bars:hover {
-  font-size: 2em;
-  max-width: fit-content;
-  align-self: center;
-}
-
 #search-addon {
   margin-left: 5%;
   height: 42px;
@@ -377,7 +365,7 @@ a:hover {
   cursor: pointer;
 }
 
-.heart:focus {
+.heart:visited {
   color: #c50707;
 }
 
@@ -411,22 +399,18 @@ a:hover {
   border-top-right-radius: 15px;
 }
 
-#toast,
-#toast-cart {
-  padding: 10px;
-  padding-left: 5px;
+#toast {
   position: relative;
   width: 230px;
   height: 50px;
-  top: 0;
   left: 80%;
   transform: translate(-50%);
-  background-color: #eff2ff;
-  color: #76777e;
-  padding: 1px;
+  background-color: #6abe8b;
+  color: rgb(250, 250, 250);
+  padding: 10px;
   border-radius: 8px;
   text-align: center;
-  z-index: 1;
+  z-index: 4; /* Para que superponga al carrito */
   box-shadow: 0 0 20px rgba(0, 0, 0, 0.3);
   visibility: hidden;
   opacity: 0;
@@ -434,9 +418,9 @@ a:hover {
   align-items: center;
   justify-content: center;
   font-size: 18px;
+  margin: 12px;
 }
-#toast.show,
-#toast-cart.show {
+#toast.show {
   visibility: visible;
   animation: fadeInOut 3s;
 }
@@ -454,15 +438,11 @@ a:hover {
   }
 }
 
-a {
-  z-index: -1;
-}
-
 .saleCallout {
   display: inline-block;
   box-sizing: content-box;
   height: 22px;
-  position: relative;
+  position: absolute;
   content: "";
   cursor: pointer;
   margin: 0 13px 0 0;
@@ -472,22 +452,240 @@ a {
   color: rgba(255, 255, 255, 1);
   text-align: center;
   text-transform: uppercase;
+  -o-text-overflow: ellipsis;
   text-overflow: ellipsis;
-  background: blue;
-  box-shadow: 0 5px 0 0 blue, 5px 5px 0 0 black;
+  background: #ba0000;
+  box-shadow: 0 5px 0 0 #ba0000, 5px 5px 0 0 #4e0213;
   transform: rotate(-20deg);
   top: 20px;
 }
+.saleCallout:before {
+  display: inline-block;
+  box-sizing: content-box;
+  z-index: 1;
+  width: 30px;
+  height: 30px;
+  position: absolute;
+  content: "";
+  cursor: pointer;
+  top: 6px;
+  right: -16px;
+  border: none;
+  border-radius: 1px 1px 4px;
+  color: #fff;
+  -o-text-overflow: clip;
+  text-overflow: clip;
+  background: #ba0000;
+  box-shadow: 0 6px 0 0 #4e0213;
+  text-shadow: none;
+  transform: rotateY(1deg) rotateZ(-45deg);
+}
 
-.h5Price {
+.saleCallout:after {
+  display: inline-block;
+  box-sizing: content-box;
+  z-index: 2;
+  width: 12px;
+  height: 12px;
+  position: absolute;
+  content: "";
+  cursor: pointer;
+  top: 16px;
+  right: 0;
+  border: none;
+  border-radius: 10px;
+  color: rgba(255, 255, 255, 0.9);
+  -o-text-overflow: clip;
+  text-overflow: clip;
+  background: #fcfcfc;
+  box-shadow: 5px 5px 0 0 #4e0213 inset;
+  text-shadow: none;
+}
+
+.saleCallout h5 {
   font-family: arial;
   font-size: 20px;
   color: #fff;
   margin-top: 0;
 }
 
+.text-Vacio {
+  text-align: center !important;
+  margin: 20px;
+  font-style: oblique;
+  font-weight: lighter;
+  color: #3d3d3d;
+}
+
 .close {
   border: 0;
   background-color: transparent;
   font-size: 1.5rem;
+}
+
+.ticket {
+  position: relative;
+  left: 50%;
+  display: inline-block;
+  /*min-width: 500px;*/
+  max-width: 100%;
+  width: auto;
+  /* margin: 50px auto 25px;
+  padding: 20px 0; */
+  clear: both;
+
+  -webkit-transform: translateX(-50%);
+  -ms-transform: translateX(-50%);
+  -o-transform: translateX(-50%);
+  transform: translateX(-50%);
+}
+
+.ticket-Header {
+  display: flex;
+  -ms-align-items: flex-start;
+  align-items: flex-start;
+  padding: 30px 30px 10px;
+  background: #fff;
+  border-top-right-radius: 5px;
+  border-top-left-radius: 5px;
+}
+
+.ticket-LogoDiv {
+  flex: 1 0 40%;
+}
+
+.ticket-Logo {
+  display: block;
+  width: 50px;
+  height: auto;
+  margin-left: 15px;
+}
+
+.ticket-Info {
+  flex: 1 0 50%;
+}
+
+.ticket-Fecha,
+.ticket-Usuario {
+  display: block;
+  font-size: 19px;
+  color: #aaa;
+  font-weight: 300;
+}
+
+.ticket-Fecha {
+  margin-bottom: 5px;
+}
+
+.ticket-Subheader {
+  background: #fff;
+  padding-bottom: 20px;
+}
+
+.ticket-Subheader2 {
+  padding: 0 45px 0 40px;
+  border-left: 5px solid #029de0;
+}
+
+.ticket-Gamekey {
+  margin: 0 0 10px 0;
+  font-size: 22px;
+  font-weight: 600;
+}
+
+.ticket-Text {
+  color: #aaa;
+  font-weight: 400;
+  font-size: 17px;
+}
+
+.ticket-Body {
+  display: block;
+  padding: 25px 30px 45px;
+}
+
+.ticket-Title {
+  display: block;
+  margin-top: 0;
+  margin-bottom: 25px;
+  text-align: center;
+}
+
+.ticket-CartList {
+  margin: 0;
+  padding: 0 15px;
+  list-style: none;
+}
+
+.ticket-CartItem {
+  display: block;
+  padding-top: 20px;
+  margin-bottom: 20px;
+  border-top: 2px dashed #aaa;
+  font-size: 18px;
+}
+
+.ticket-Portada {
+  padding-right: 15px;
+  color: #aaa;
+  font-weight: 300;
+}
+
+.ticket-Nombre {
+  color: #aaa;
+  font-weight: 300;
+}
+
+.ticket-Precio {
+  float: right;
+  letter-spacing: 1px;
+}
+
+.ticket-PrecioTotal {
+  font-size: 20px;
+  text-transform: uppercase;
+}
+
+.ticket-Footer {
+  position: relative;
+  padding: 30px 20px;
+  border-top: 2px dashed black;
+  border-bottom-left-radius: 5px;
+  border-bottom-right-radius: 5px;
+}
+
+.ticket-Footer::before,
+.ticket-Footer::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  border: 4px solid transparent;
+
+  -webkit-transform: translateY(calc(-50% - 1px));
+  -ms-transform: translateY(calc(-50% - 1px));
+  -o-transform: translateY(calc(-50% - 1px));
+  transform: translateY(calc(-50% - 1px));
+}
+
+.ticket-Footer::before {
+  left: 0;
+  border-left: 7px solid black;
+}
+
+.ticket-Footer::after {
+  right: 0;
+  border-right: 7px solid black;
+}
+
+.ticket-Barcode {
+  display: block;
+  margin: 0 auto;
+  max-width: 300px;
+  height: auto;
+}
+.spanAlquiler {
+  font-size: 0.8em;
+  font-style: oblique;
+  color: #989898;
+  margin-right: 0.7rem;
 }

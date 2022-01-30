@@ -17,37 +17,6 @@ var nTotal = 0;
 var nTotalCart = 0;
 var cartOpen = false;
 
-
-// ---------- FUNCIONES GENERALES ----------
-
-function notificarUsuario(texto) {
-    alert(texto);
-}
-
-function llamadaAjax(url, parametros, manejadorOK, manejadorError) {
-    var request = new XMLHttpRequest();
-
-    request.open("POST", url);
-    request.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
-
-    request.onreadystatechange = function() {
-        if (this.readyState == 4) {
-            if (request.status == 200) {
-                manejadorOK(request.responseText);
-            } else {
-                if (manejadorError != null) manejadorError(request.responseText);
-            }
-        }
-    };
-
-    request.send(parametros);
-}
-
-function objetoAParametrosParaRequest(objeto) {
-    // Esto convierte un objeto JS en un listado de clave1=valor1&clave2=valor2&clave3=valor3
-    return new URLSearchParams(objeto).toString();
-}
-
 // ---------- MANEJADORES DE EVENTOS / COMUNICACIÓN CON PHP ----------
 
 function inicializar() {
@@ -68,6 +37,10 @@ function inicializar() {
     });
     document.getElementById("cart").addEventListener("click", obtenerCarrito);
 
+    document.getElementById("modalConfirm").addEventListener("click", modal);
+    document.getElementById("close").addEventListener("click", modal);
+    
+
     obtenerJuegos();
 
     //comprobarAdmin();
@@ -77,22 +50,16 @@ function inicializar() {
     cartItems = document.getElementById("cartItems");
     numTotal = document.getElementById("numTotal");
     precioTotal = document.getElementById("precioTotal");
-    modalBody = document.getElementById("modal-body");
+    modalBody = document.getElementById("modalBody");
+
+    ticketCartList = document.getElementById("ticketCartList")
+    ticketFecha = document.getElementById("ticketFecha");
+    ticketUsuario = document.getElementById("ticketUsuario");
+    ticketGamekey = document.getElementById("ticketGamekey");
+    ticketText = document.getElementById("ticketText");
+    ticketTitle = document.getElementById("ticketTitle");
 
     cartOpen = false;
-}
-
-function comprobarSesionIniciada(){
-    llamadaAjax("../_php/ComprobarSesionIniciada.php", "", 
-        function(texto){
-            var sesionIniciada = JSON.parse(texto);
-            if(!sesionIniciada){
-                window.location ="../_php/CerrarSesion.php";
-            }
-        }, function(texto) {
-            notificarUsuario("Error Ajax al comprobar sesión: " + texto);
-        }
-    );
 }
 
 function obtenerJuegos() {
@@ -161,25 +128,11 @@ function buscar() {
     }
 }
 
-/*function comprobarAdmin() {
-    llamadaAjax("../_php/ComprobarAdmin.php", "",
-        function(texto) {
-            var admin = JSON.parse(texto);
-            if(admin){
-                crearBtnInsertarPeliculaAdmin();
-            }
-        },
-        function(texto) {
-            notificarUsuario("Error Ajax al comprobar administrador: " + texto);
-        }
-    );
-}*/
 
 function aniadirJuegoWishList(juegoId){
-    wishList();
     llamadaAjax("../_php/AniadirJuegoWishList.php", "juegoId="+parseInt(juegoId),
         function(texto) {   
-            alert("Añadido")
+           toast('<i class="far fa-heart"></i>  Añadido a wishlist');
         },
         function(texto) {
             notificarUsuario("Error Ajax al añadir juego a wishlist: " + texto);
@@ -195,13 +148,13 @@ function obtenerCarrito() {
 
             var carrito = JSON.parse(texto);
             
-            if(carrito.length == 0) {
-                cartItems.innerHTML = "Vacío"; // añadir algun mensaje y style
+            if (carrito.length == 0) {
+                cartItems.innerHTML = '<h6 class="text-Vacio">Tu carrito está vacío</h6>'; // añadir algun mensaje y style
 
                 //pintamos a 0 las variables totales
                 precioTotal.innerHTML = 0 +'€';
                 numTotal.innerHTML = 0;
-                addTotalCart(0);
+                addTotalCart(0);    
             } else {
                 pTotal = 0; // lo vamos a volver a calcular
                
@@ -222,8 +175,9 @@ function aniadirJuegoCarrito(juegoId){
     llamadaAjax("../_php/AniadirJuegoCarrito.php", "juegoId="+parseInt(juegoId),
     function(texto) {
         if(texto){
-            if(cartItems.innerHTML == "Vacío") { // Si es la primera vez
+            if(cartItems.innerHTML == '<h6 class="text-Vacio">Tu carrito está vacío</h6>') { // Si es la primera vez
                 cartItems.innerHTML = "";
+                pTotal = 0;
             }
             var juego = JSON.parse(texto);
             addTotalCart(1); // sumamos 1 al total
@@ -254,17 +208,65 @@ function borrarJuegoCarrito(juegoId){
 );
 }
 
-/* function obtenerUnidadesJuegoCarrito(juegoId) {
-    llamadaAjax("../_php/ObtenerUnidadesJuegoCarrito.php", "juegoId="+parseInt(juegoId),
-    function(texto) {   
-        alert(JSON.parse(texto))
-        return JSON.parse(texto);
-    },
+function obtenerCarritoTicket() {
+
+    var lastItem = false;
+
+    llamadaAjax("../_php/CarritoObtener.php", "",
+        function(texto) {
+
+            var carrito = JSON.parse(texto);
+            
+            if(carrito.length == 0) {
+                //pintamos a 0 las variables totales
+                precioTotal.innerHTML = 0 +'€';
+                numTotal.innerHTML = 0;
+                addTotalCart(0);
+            } else {
+                pTotal = 0; // lo vamos a volver a calcular
+               
+                for (var i=0; i<carrito.length; i++) {
+                    nTotal = 0; //lo vamos a rellenar con el length
+                    nTotalCart = 0; // ""
+                    addTotalCart(carrito.length);
+
+                    if(carrito.length == (i+1)){ // Si es el ultimo
+                        lastItem = true;
+                    }
+
+                    domCrearTicketItem(carrito[i], lastItem);
+                    obtenerPedido();
+                 }
+            }
+        }, function (texto){
+            notificarUsuario("Error Ajax al cargar carrito: " + texto);
+        }
+    );
+}
+
+function obtenerPedido(){
+    llamadaAjax("../_php/PedidoObtener.php","",
     function(texto) {
-        notificarUsuario("Error Ajax al buscar unidades: " + texto);
+            var pedido = JSON.parse(texto);
+            rellenarTicketPedido(pedido);
+            obtenerUsuario();
+    }, function (texto){
+        notificarUsuario("Error Ajax al obtener pedido: " + texto);
     }
 );
-} */
+}
+
+function obtenerUsuario(){
+    llamadaAjax("../_php/UsuarioObtener.php","",
+    function(texto) {
+            var usuario = JSON.parse(texto);
+            rellenarTicketUsuario(usuario);
+    }, function (texto){
+        notificarUsuario("Error Ajax al obtener usuario: " + texto);
+    }
+);
+}
+
 
 // ---------- DOM GENERAL ----------
 
@@ -272,6 +274,7 @@ function domCrearJuego(juego) {
     
     var divRow = document.createElement("div");
     divRow.setAttribute("class", "row");
+    //divRow.setAttribute("id", 'card-'+juego.id);
 
     var divCol = document.createElement("div");
     divCol.setAttribute("class", "col-lg-4");
@@ -279,6 +282,7 @@ function domCrearJuego(juego) {
     var divCard = document.createElement("div");
     divCard.setAttribute("class", "card");
     divCard.setAttribute("style", "width:18rem;");
+    
 
     var spanHeart = document.createElement("span");
     spanHeart.setAttribute("class", "heart");
@@ -292,6 +296,10 @@ function domCrearJuego(juego) {
     var imgCard = document.createElement("img");
     imgCard.setAttribute("src","../_img/"+ juego.portada);
     imgCard.setAttribute("class", "first-image");
+    imgCard.addEventListener("click" , function(){
+        window.location.href = "../_html/juego.html?juegoId="+juego.id;
+    });
+
 
     var divBody = document.createElement("div");
     divBody.setAttribute("class", "card-body");
@@ -309,8 +317,7 @@ function domCrearJuego(juego) {
     divPrice.setAttribute("class", "saleCallout");
 
     var h5Price = document.createElement("h5");
-    h5Price.setAttribute("class", "h5Price")
-    h5Price.innerHTML= juego.precio;
+    h5Price.innerHTML= juego.precio+'€';
 
     var hr = document.createElement("hr");
 
@@ -371,6 +378,7 @@ function domCrearJuego(juego) {
         img.setAttribute("src", "../_img/"+juegoCarrito.portada + " ");
         img.setAttribute("width", "35px");
         img.setAttribute("height", "50px");
+        img.setAttribute("style", "border-radius: 5px;")
 
         var spanNombre = document.createElement("span");
         spanNombre.setAttribute("class", "item-name");
@@ -380,14 +388,10 @@ function domCrearJuego(juego) {
         spanPrecio.setAttribute("class", "item-price");
         spanPrecio.innerHTML = juegoCarrito.precio  + "€ ";
 
-/*         var inputCantidad = document.createElement("input");
-        inputCantidad.setAttribute("class", "item-quantity");
-        inputCantidad.setAttribute("type", "number");
-        inputCantidad.setAttribute("min", "0");
-        inputCantidad.setAttribute("max", "99");
-        /* inputCantidad.setAttribute("value", ); 
-        inputCantidad.setAttribute("style", "width:3em;");
- */
+        var spanTiempoAlquiler = document.createElement("span");
+        spanTiempoAlquiler.setAttribute("class", "spanAlquiler");
+        spanTiempoAlquiler.innerHTML = "7 días de alquiler";
+
         var btnBorrar = document.createElement("button");
         btnBorrar.setAttribute("class", "btn btn-danger");
         btnBorrar.setAttribute("style", "width:1em; height:1.6em;");
@@ -411,15 +415,88 @@ function domCrearJuego(juego) {
         li.appendChild(img);
         li.appendChild(spanNombre);
         li.appendChild(spanPrecio);
-       /*  li.appendChild(inputCantidad); */
+        li.appendChild(spanTiempoAlquiler);
         li.appendChild(btnBorrar);
         
         ul.appendChild(li);
         
         cartItems.appendChild(ul);
 
-
     }
+
+    
+    function domCrearTicketItem(juegoCarrito, lastItem) {
+    
+        var liItem = document.createElement("li");
+        liItem.setAttribute("class", "ticket-CartItem");
+
+        var imgPortada = document.createElement("img");
+        imgPortada.setAttribute("src", "../_img/"+juegoCarrito.portada + " ");
+        imgPortada.setAttribute("width", "40px");
+        imgPortada.setAttribute("height", "55px");
+        imgPortada.setAttribute("style", "margin-right: 10px;border-radius: 5px;")
+        
+
+        
+        var spanNombre = document.createElement("span");
+        spanNombre.setAttribute("class", "ticket-Nombre");
+        spanNombre.innerHTML = juegoCarrito.nombre + ' ';
+
+        var spanPrecio = document.createElement("span");
+        spanPrecio.setAttribute("class", "ticket-Precio");
+        spanPrecio.innerHTML = juegoCarrito.precio+"€";
+
+        pTotal += parseFloat(juegoCarrito.precio);
+
+        liItem.appendChild(imgPortada);
+        liItem.appendChild(spanPrecio);
+        liItem.appendChild(spanNombre);
+        
+        ticketCartList.appendChild(liItem);
+
+        if(lastItem) { // si es el último pintamos el total
+            domCrearTicketTotal(pTotal);
+        }
+    }
+
+    function domCrearTicketTotal(pTotal) {
+
+        var liItem = document.createElement("li");
+        liItem.setAttribute("class", "ticket-CartItem");
+
+        var spanTotal = document.createElement("span");
+        spanTotal.setAttribute("class", "ticket-PrecioTotal");
+        spanTotal.innerHTML= "TOTAL";
+
+        var spanNTotal = document.createElement("span");
+        spanNTotal.setAttribute("class", "ticket-Precio");
+        spanNTotal.innerHTML = pTotal+"€";
+
+        liItem.appendChild(spanTotal);
+        liItem.appendChild(spanNTotal);
+
+       
+        ticketCartList.appendChild(liItem);
+        
+    }
+
+    function rellenarTicketUsuario(usuario) {
+
+        ticketUsuario.innerHTML = usuario.nombre + ' ' + usuario.apellidos;
+        ticketText.innerHTML = 'Se enviará al correo: ' + usuario.email;
+    }
+
+    function rellenarTicketPedido(pedido) {
+
+        ticketFecha.innerHTML = pedido.fechaPedido;
+        ticketTitle.innerHTML = "Número de referencia: AGON-"+pedido.id;
+        ticketGamekey.innerHTML = 'Gamekey: ' + pedido.gameKey;
+
+        document.getElementById("verPedido").addEventListener("click", function() {
+            window.location.href = "javascript:window.print()";
+        })
+    }
+
 
 // ---------- JQQUERY ----------
 
@@ -440,35 +517,46 @@ function cart(){
 
 function addTotalCart(cantidad){
     var cart = $('#cart');
-    nTotalCart += cantidad;
+    
+    if (cantidad == 0) { // lo vaciamos
+        nTotalCart = 0;    
+    }else {
+        nTotalCart += cantidad;
+    }
+
     cart.attr('data-totalitems', nTotalCart);
 }
 
-function modal(){ // https://getbootstrap.com/docs/4.0/components/modal/
-
-    var modalConfirm = $('#modalConfirm');
-    
-    modalConfirm.on("click", function() {
+function modal(){ 
+    if(this.id == "modalConfirm"){
         if (nTotalCart > 0){ 
-            $("#showModal").modal("show");
+            $("#showModal").modal("show"); // abrimos modal
+
+            $("#showModal").click(function() { // controlamos que al clickar fuera del content reset carrito
+            obtenerCarrito();
+            });
+
+            $("#modalContent").click(function (e) { // frenamos la propagación del evento
+                e.stopPropagation();
+            });
+
+            // reiniciamos 
+            ticketCartList.innerHTML = ""; 
+            ticketTitle.innerHTML = "Número de referencia: AGON-";
+            ticketGamekey.innerHTML = 'Gamekey: ';
+
+            obtenerCarritoTicket();
         } else {
-            alert("El carrito está vacío"); //mirar porque da mas de 1 alert
+            alert("El carrito está vacío"); 
         }
-    });
+    } else if(this.id == "close"){  
+        $("#showModal").modal("hide");  // al clickar X cierra y reset carrito
+        
+        obtenerCarrito();
 
-    var close = $('#close');
-
-    close.on("click", function() {
-        $("#showModal").modal("hide");
-    });
-    
+        ticketTitle.innerHTML = "Número de referencia: AGON-";
+        ticketGamekey.innerHTML = 'Gamekey: ';
+    }
 }
 
-function wishList(){
-    var list = document.getElementById("toast");
-    list.classList.add("show");
-    list.innerHTML = '<i class="far fa-heart wish"></i> Product added to List';
-    setTimeout(function(){
-    list.classList.remove("show");
-    },3000);
-}
+

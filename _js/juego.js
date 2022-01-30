@@ -8,7 +8,6 @@ window.onload = inicializar;
 
 // ---------- VARIABLES GLOBALES ----------
 
-var juego;
 var juegoId;
 var cartItems;
 var numTotal;
@@ -16,80 +15,88 @@ var precioTotal;
 var pTotal = 0;
 var nTotal = 0;
 var cartOpen = false;
+var valoracion = 0;
+var usuarioNombre;
+var usuarioApellidos;
 
-
-// ---------- FUNCIONES GENERALES ----------
-
-function notificarUsuario(texto) {
-    alert(texto);
-}
-
-function llamadaAjax(url, parametros, manejadorOK, manejadorError) {
-    var request = new XMLHttpRequest();
-
-    request.open("POST", url);
-    request.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
-
-    request.onreadystatechange = function() {
-        if (this.readyState == 4) {
-            if (request.status == 200) {
-                manejadorOK(request.responseText);
-            } else {
-                if (manejadorError != null) manejadorError(request.responseText);
-            }
-        }
-    };
-
-    request.send(parametros);
-}
-
-function objetoAParametrosParaRequest(objeto) {
-    // Esto convierte un objeto JS en un listado de clave1=valor1&clave2=valor2&clave3=valor3
-    return new URLSearchParams(objeto).toString();
-}
-
-function obtenerIdUrl(){
-    var urlEntera = window.location.search;
-    var urlParams = new URLSearchParams(urlEntera);
-    juegoId = urlParams.get('juegoId');
-    console.log(juegoId);
-}
 
 // ---------- MANEJADORES DE EVENTOS / COMUNICACIÓN CON PHP ----------
 
 function inicializar() {
-    cart();
 
-    document.getElementById("cart").addEventListener("click", obtenerCarrito);
-
-    obtenerIdUrl(); // pillamos antes el juegoId de la url
+    obtenerJuegoIdUrl(); // pillamos antes el juegoId de la url
     obtenerJuego(juegoId);
-
-    //comprobarAdmin();
+    obtenerGenero(juegoId);
+    obtenerPlataforma(juegoId);
+    obtenerUsuario();
+    obtenerResenias(juegoId);
 
     infoPelicula = document.getElementById("infoPelicula");
-    cartItems = document.getElementById("cartItems");
-    numTotal = document.getElementById("numTotal");
-    precioTotal = document.getElementById("precioTotal");
 
     cartOpen = false;
-}
 
-function comprobarSesionIniciada(){
-    llamadaAjax("../_php/ComprobarSesionIniciada.php", "", 
-        function(texto){
-            var sesionIniciada = JSON.parse(texto);
-            if(!sesionIniciada){
-                window.location ="../_php/CerrarSesion.php";
-            }
-        }, function(texto) {
-            notificarUsuario("Error Ajax al comprobar sesión: " + texto);
-        }
-    );
+    document.getElementById("btnWishlist").addEventListener("click", function(){
+        aniadirJuegoWishList(juegoId);
+    });
+
+    document.getElementById("insertar").addEventListener("click", insertarResenia);
+
+    //REDIRECCIONES
+    document.getElementById("cart").addEventListener("click", function(){
+        window.location.href = "../_html/index.html";
+    })
+    document.getElementById("btnBuscar").addEventListener("click", function(){
+        window.location.href = "../_html/index.html";
+    })
+    document.getElementById("inputBuscar").addEventListener("click", function(){
+        window.location.href = "../_html/index.html";
+    })
+
+    // VALORACION
+    document.getElementById("star1").addEventListener("click", function() {
+        document.getElementById("star1").className= "fas fa-star";
+        document.getElementById("star2").className= "far fa-star";
+        document.getElementById("star3").className= "far fa-star";
+        document.getElementById("star4").className= "far fa-star";
+        document.getElementById("star5").className= "far fa-star";
+        valoracion = 1;
+    })
+    document.getElementById("star2").addEventListener("click", function() {
+        document.getElementById("star1").className= "fas fa-star";
+        document.getElementById("star2").className= "fas fa-star";
+        document.getElementById("star3").className= "far fa-star";
+        document.getElementById("star4").className= "far fa-star";
+        document.getElementById("star5").className= "far fa-star";
+        valoracion = 2;
+    })
+    document.getElementById("star3").addEventListener("click", function() {
+        document.getElementById("star1").className= "fas fa-star";
+        document.getElementById("star2").className= "fas fa-star";
+        document.getElementById("star3").className= "fas fa-star";
+        document.getElementById("star4").className= "far fa-star";
+        document.getElementById("star5").className= "far fa-star";
+        valoracion = 3;
+    })
+    document.getElementById("star4").addEventListener("click", function() {
+        document.getElementById("star1").className= "fas fa-star";
+        document.getElementById("star2").className= "fas fa-star";
+        document.getElementById("star3").className= "fas fa-star";
+        document.getElementById("star4").className= "fas fa-star";
+        document.getElementById("star5").className= "far fa-star";
+        valoracion = 4;
+    })
+    document.getElementById("star5").addEventListener("click", function() {
+        document.getElementById("star1").className= "fas fa-star";
+        document.getElementById("star2").className= "fas fa-star";
+        document.getElementById("star3").className= "fas fa-star";
+        document.getElementById("star4").className= "fas fa-star";
+        document.getElementById("star5").className= "fas fa-star";
+        valoracion = 5;
+    })
 }
 
 function obtenerJuego(juegoId) {
-    llamadaAjax("../_php/JuegoObtenerPorId.php", "juegoId="+ juegoId,
+    llamadaAjax("../_php/JuegoObtenerPorId.php", "juegoId="+ parseInt(juegoId),
         function(texto) {
             var juego = JSON.parse(texto);
             
@@ -101,66 +108,71 @@ function obtenerJuego(juegoId) {
     );
 }
 
-function obtenerCarrito() {
-
-    llamadaAjax("../_php/CarritoObtener.php", "",
-        function(texto) {
-            cartItems.innerHTML = "";
-
-            var carrito = JSON.parse(texto);
-            
-            if(carrito.length == 0) {
-                cartItems.innerHTML = "Vacío";
-                precioTotal.innerHTML = 0 +'€';
-                numTotal.innerHTML = 0;
-            } else {
-                pTotal = 0;
-               
-                for (var i=0; i<carrito.length; i++) {
-                    nTotal = 0;
-                    domCrearJuegoCarrito(carrito[i], carrito.length, parseFloat(carrito[i].precio)); 
-                 }
-            }
-        }, function (texto){
-            notificarUsuario("Error Ajax al cargar carrito: " + texto);
-        }
-    );
-}
-
-function aniadirJuegoCarrito(juegoId){
-    llamadaAjax("../_php/AniadirJuegoCarrito.php", "juegoId="+parseInt(juegoId),
+function obtenerGenero(juegoId) {
+    llamadaAjax("../_php/GeneroObtenerPorJuegoId.php", "juegoId="+parseInt(juegoId),
     function(texto) {
-        if(texto){
-            if(cartItems.innerHTML == "Vacío") { // Si es la primera vez
-                cartItems.innerHTML = "";
-            }
-            var juego = JSON.parse(texto);
-            domCrearJuegoCarrito(juego, 1, parseFloat(juego.precio)); 
+
+        var genero = JSON.parse(texto);
+
+        for (var i=0; i<genero.length; i++) {
+            obtenerNombreGenero(genero[i].generoId);
         }
+        
     }, function (texto){
-        notificarUsuario("Error Ajax al borrar juego carrito: " + texto);
+        notificarUsuario("Error Ajax al cargar Genero: " + texto);
     }
 );
 }
 
-function borrarJuegoCarrito(juegoId){
-    llamadaAjax("../_php/BorrarJuegoCarrito.php", "juegoId="+parseInt(juegoId),
+function obtenerNombreGenero(generoId) {
+    
+    llamadaAjax("../_php/GeneroObtenerPorId.php", "generoId="+parseInt(generoId),
     function(texto) {
-        var juego = JSON.parse(texto);
-        pTotal -= parseFloat(juego.precio);
-        nTotal--;
-        obtenerCarrito();
+        var genero = JSON.parse(texto);
+        
+        rellenarGenero(genero.nombre);
+        
     }, function (texto){
-        notificarUsuario("Error Ajax al borrar juego carrito: " + texto);
+        notificarUsuario("Error Ajax al cargar Genero: " + texto);
     }
 );
 }
+
+function obtenerPlataforma(juegoId) {
+    llamadaAjax("../_php/PlataformaObtenerPorJuegoId.php", "juegoId="+parseInt(juegoId),
+    function(texto) {
+
+        var plataforma = JSON.parse(texto);
+
+        for (var i=0; i<plataforma.length; i++) {
+            obtenerNombrePlataforma(plataforma[i].plataformaId, parseInt(juegoId));
+        }
+        
+    }, function (texto){
+        notificarUsuario("Error Ajax al cargar Plataforma: " + texto);
+    }
+);
+}
+
+function obtenerNombrePlataforma(plataformaId) {
+    
+    llamadaAjax("../_php/PlataformaObtenerPorId.php", "plataformaId="+parseInt(plataformaId),
+    function(texto) {
+        var plataforma = JSON.parse(texto);
+        
+        rellenarPlataforma(plataforma.id);
+        
+    }, function (texto){
+        notificarUsuario("Error Ajax al cargar Plataforma: " + texto);
+    }
+);
+}
+
 
 function aniadirJuegoWishList(juegoId){
-    wishList();
     llamadaAjax("../_php/AniadirJuegoWishList.php", "juegoId="+parseInt(juegoId),
         function(texto) {   
-            alert("Añadido")
+           toast('<i class="far fa-heart"></i>  Añadido a wishlist');
         },
         function(texto) {
             notificarUsuario("Error Ajax al añadir juego a wishlist: " + texto);
@@ -168,109 +180,250 @@ function aniadirJuegoWishList(juegoId){
     );
 }
 
+function obtenerResenias(juegoId) {
+    llamadaAjax("../_php/ReseniasObtener.php", "juegoId=" + parseInt(juegoId),
+        function(texto) {  
+
+            var resenias = JSON.parse(texto);
+        
+
+            if(resenias != null) {
+                for (var i=0; i<resenias.length; i++) {
+                    domCrearResenia(resenias[i], usuarioNombre, usuarioApellidos);
+                }
+            }
+        },
+        function(texto) {
+            notificarUsuario("Error Ajax al obtener resenias: " + texto);
+        }
+    );
+}
+
+function insertarResenia() {
+    llamadaAjax("../_php/ReseniaInsertar.php", "mensaje=" + document.getElementById("insertarResenia").value+
+                "&juegoId="+parseInt(juegoId)+"&valoracion="+valoracion,
+        function(texto) {
+            
+            var resenia = JSON.parse(texto);
+            
+            document.getElementById("insertarResenia").value = ""; //vaciamos 
+            valoracion = 0;
+
+            domCrearResenia(resenia, usuarioNombre, usuarioApellidos);
+            
+        },
+        function(texto) {
+            notificarUsuario("Error Ajax al insertar resenia: " + texto);
+        }
+    );
+}
+
+function obtenerUsuario(){
+    llamadaAjax("../_php/UsuarioObtener.php","",
+    function(texto) {
+        var usuario = JSON.parse(texto);
+        
+        usuarioNombre = usuario.nombre;
+        usuarioApellidos = usuario.apellidos;
+
+    }, function (texto){
+        notificarUsuario("Error Ajax al obtener usuario: " + texto);
+    }
+);
+}
+
+
 // ---------- DOM GENERAL ----------
 
 function domCrearJuego(juego) {
+
+    document.getElementById("aPrecio").innerHTML = parseInt(juego.precio) * 2 + '€';
+
+    document.getElementById("precio").innerHTML = juego.precio+ '€';
+
+    document.getElementById("portada").setAttribute("src","../_img/"+ juego.portada);
+
+    document.getElementById("nombre").innerHTML = juego.nombre;
+   
+    document.getElementById("pegi").setAttribute("src","../_img/"+ juego.pegi);
+
+    document.getElementById("descripcion").innerHTML = juego.descripcion;
+
+    var trailer = document.createElement("p");
+    trailer.setAttribute("class", "ml-auto")
+    trailer.setAttribute("id", "pTrailer");
+    trailer.innerHTML = juego.trailer;
+
+    document.getElementById("trailer").appendChild(trailer);
     
-    var divRow = document.createElement("div");
-    divRow.setAttribute("class", "row");
 
-    var divCol = document.createElement("div");
-    divCol.setAttribute("class", "col-lg-4");
+    }
 
-    var divCard = document.createElement("div");
-    divCard.setAttribute("class", "card");
-    divCard.setAttribute("style", "width:18rem;");
+    function rellenarGenero(nombre){
 
-    var spanHeart = document.createElement("span");
-    spanHeart.setAttribute("class", "heart");
+        var span = document.createElement("span");
+        span.innerHTML = nombre+'  ';
 
-    var iHeart = document.createElement("i");
-    iHeart.setAttribute("class", "fas fa-heart");
-    iHeart.addEventListener("click",  function () {
-       aniadirJuegoWishList(juego.id); 
-    });
+        document.getElementById("genero").appendChild(span);
 
-    var imgCard = document.createElement("img");
-    imgCard.setAttribute("src","../_img/"+ juego.portada);
-    imgCard.setAttribute("class", "first-image");
+    }
 
-    var divBody = document.createElement("div");
-    divBody.setAttribute("class", "card-body");
+    function rellenarPlataforma(id){
 
-    var a = document.createElement("a");
-    a.setAttribute("href", "#");
-    a.addEventListener("click", function(){
-        aniadirJuegoCarrito(juego.id);
-        if(cartOpen == false) {
-            document.getElementById("shopping-cart").style.display = "block";
+        var btnPlataforma = obtenerInfoPlataforma(id, "btn");
+        var iPlataforma = obtenerInfoPlataforma(id, "i");
+
+        var btn = document.createElement("btn");
+        btn.setAttribute("class", btnPlataforma);
+        btn.setAttribute("style", "margin-right: 1rem;")
+
+        var i = document.createElement("i");
+        i.setAttribute("class", iPlataforma);
+
+        btn.appendChild(i);
+
+        document.getElementById("plataforma").appendChild(btn);
+
+    }
+
+    function domCrearResenia(resenia, usuarioNombre, usuarioApellidos){
+
+        var divMensaje = document.createElement("div");
+        divMensaje.setAttribute("class", "divInsertarResenia");
+
+        var divMensaje2 = document.createElement("div");
+        divMensaje2.setAttribute("class", "divInsertarResenia2");
+
+        var divValoracion = document.createElement("div");
+        divValoracion.setAttribute("class", "divValoracion");
+        divValoracion.setAttribute("id", "divValoracion"+resenia.id);
+
+        var pMensaje = document.createElement("p");
+        pMensaje.setAttribute("class", "pMensaje");
+        pMensaje.innerHTML = resenia.mensaje;
+
+        var divDatosTop = document.createElement("div");
+        
+        var divDatosBottom = document.createElement("div");
+        
+        var divDate = document.createElement("div");
+        divDate.setAttribute("class", "fecha");
+
+        var date = document.createElement("span");
+        date.setAttribute("class", "datos");
+        date.innerHTML = resenia.fecha;
+
+        var divNombreEntero = document.createElement("div");
+        divNombreEntero.setAttribute("class", "nombre");
+
+        var nombre = document.createElement("span");
+        nombre.setAttribute("class", "datos");
+        nombre.innerHTML = usuarioNombre;
+
+        var apellidos = document.createElement("span");
+        apellidos.setAttribute("class", "datos");
+        apellidos.innerHTML = usuarioApellidos;
+
+        divDate.appendChild(date);
+
+        divNombreEntero.appendChild(nombre);
+        divNombreEntero.appendChild(apellidos);
+
+        divDatosTop.appendChild(divNombreEntero);
+        divDatosTop.appendChild(divValoracion);
+
+        divDatosBottom.appendChild(divDate);
+
+        divMensaje2.appendChild(divDatosTop);
+        divMensaje2.appendChild(pMensaje);
+        divMensaje2.appendChild(divDatosBottom);
+
+        divMensaje.appendChild(divMensaje2);
+
+        document.getElementById("resenias").appendChild(divMensaje);
+
+        domCrearValoracion(resenia.valoracion, resenia.id);
+
+    }
+
+    function domCrearValoracion(valoracion, idDivValoraciones){
+
+        var star1 = document.createElement("i");
+        var star2 = document.createElement("i");
+        var star3 = document.createElement("i");
+        var star4 = document.createElement("i");
+        var star5 = document.createElement("i");
+        
+        if(valoracion == 5){
+            star1.setAttribute("class", "fas fa-star");
+            star2.setAttribute("class", "fas fa-star");
+            star3.setAttribute("class", "fas fa-star");
+            star4.setAttribute("class", "fas fa-star");
+            star5.setAttribute("class", "fas fa-star");
+        } else if(valoracion == 4){
+            star1.setAttribute("class", "fas fa-star");
+            star2.setAttribute("class", "fas fa-star");
+            star3.setAttribute("class", "fas fa-star");
+            star4.setAttribute("class", "fas fa-star");
+            star5.setAttribute("class", "far fa-star");
+        } else if(valoracion == 3){
+            star1.setAttribute("class", "fas fa-star");
+            star2.setAttribute("class", "fas fa-star");
+            star3.setAttribute("class", "fas fa-star");
+            star4.setAttribute("class", "far fa-star");
+            star5.setAttribute("class", "far fa-star");
+        } else if(valoracion == 2){
+            star1.setAttribute("class", "fas fa-star");
+            star2.setAttribute("class", "fas fa-star");
+            star3.setAttribute("class", "far fa-star");
+            star4.setAttribute("class", "far fa-star");
+            star5.setAttribute("class", "far fa-star");
+        } else if(valoracion == 1){
+            star1.setAttribute("class", "fas fa-star");
+            star2.setAttribute("class", "far fa-star");
+            star3.setAttribute("class", "far fa-star");
+            star4.setAttribute("class", "far fa-star");
+            star5.setAttribute("class", "far fa-star");
+        } else if(valoracion == 0){
+            star1.setAttribute("class", "far fa-star");
+            star2.setAttribute("class", "far fa-star");
+            star3.setAttribute("class", "far fa-star");
+            star4.setAttribute("class", "far fa-star");
+            star5.setAttribute("class", "far fa-star");
         }
-    })
-    
-    var divPrice = document.createElement("div");
-    divPrice.setAttribute("class", "saleCallout");
 
-    var h5Price = document.createElement("h5");
-    h5Price.setAttribute("class", "h5Price")
-    h5Price.innerHTML= juego.precio;
-
-    var hr = document.createElement("hr");
-
-    var divDesplegable = document.createElement("div");
-    divDesplegable.setAttribute("class", "card-body-a");
-    divDesplegable.innerHTML = " Añadir al carrito <i class='fas fa-cart-plus'></i> | "+ juego.precio+ '€';
-
-    var divDesplegable2 = document.createElement("div");
-    divDesplegable2.setAttribute("style", "text-align: center;");
-    
-    var aTitle = document.createElement("a");
-    aTitle.setAttribute("href", "../_html/juego.html?juegoId="+juego.id);
-
-
-    var h5 = document.createElement("h5");
-    h5.setAttribute("class", "card-title");
-    h5.innerHTML = juego.nombre;
-      
-    aTitle.appendChild(h5);
-
-    divDesplegable2.appendChild(aTitle);
-    
-    a.appendChild(divDesplegable);
-
-    divPrice.appendChild(h5Price);
-
-    divBody.appendChild(a);
-    divBody.appendChild(hr);
-    divBody.appendChild(divDesplegable2);
-
-    spanHeart.appendChild(iHeart);
-
-    divCard.appendChild(divPrice);
-    divCard.appendChild(spanHeart);
-    divCard.appendChild(imgCard);
-    divCard.appendChild(divBody);
-
-    divCol.appendChild(divCard);
-
-    divRow.appendChild(divCol);
-
-    infoPelicula.appendChild(divRow);
+        document.getElementById("divValoracion"+idDivValoraciones).appendChild(star1);
+        document.getElementById("divValoracion"+idDivValoraciones).appendChild(star2);
+        document.getElementById("divValoracion"+idDivValoraciones).appendChild(star3);
+        document.getElementById("divValoracion"+idDivValoraciones).appendChild(star4);
+        document.getElementById("divValoracion"+idDivValoraciones).appendChild(star5);
 
     }
+// ---------------- FUNCIONES UTILIDADES ----------------------
 
-// ---------- JQQUERY ----------
-
-function cart(){
-
-    var cart = $('#cart');
-    
-    cart.on("click", function() {
-        $(".shopping-cart").fadeToggle("fast");
-    });
-    
-    if(cartOpen == false) {
-        cartOpen = true;
-    } else {
-        cartOpen = false;
+    function obtenerJuegoIdUrl(){
+        var urlEntera = window.location.search;
+        var urlParams = new URLSearchParams(urlEntera);
+        juegoId = urlParams.get('juegoId');
     }
-}
+
+    function obtenerInfoPlataforma(id, dato){
+        if(dato == "btn"){
+            if(id==1){
+                return "btn btn-primary";
+            } else if(id==2){
+                return "btn btn-dark";
+            } else if(id==3){
+                return "btn btn-success";
+            }
+        } else {
+            if(id==1){
+                return "fab fa-playstation";
+            } else if(id==2){
+                return "fab fa-steam";
+            } else if(id==3){
+                return "fab fa-xbox";
+            }
+        }
+    }
+

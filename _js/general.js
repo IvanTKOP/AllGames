@@ -1,16 +1,3 @@
-// ----------------------------------- CARRITO ------------------------------------------
-
-window.onpaint =  comprobarSesionIniciada(); // inicia antes que window.onload 
-window.onload = inicializar;
-
-
-
-
-// ---------- VARIABLES GLOBALES ----------
-
-var carrito;
-
-
 // ---------- FUNCIONES GENERALES ----------
 
 function notificarUsuario(texto) {
@@ -41,19 +28,22 @@ function objetoAParametrosParaRequest(objeto) {
     return new URLSearchParams(objeto).toString();
 }
 
-// ---------- MANEJADORES DE EVENTOS / COMUNICACIÓN CON PHP ----------
-
-function inicializar() {
-    carrito = document.getElementById("carrito");
+function toast(texto){
+    var list = document.getElementById("toast");
+    list.classList.add("show");
+    list.innerHTML = texto;
+    setTimeout(function(){
+    list.classList.remove("show");
+    },3000);
 }
+
 
 function comprobarSesionIniciada(){
     llamadaAjax("../_php/ComprobarSesionIniciada.php", "", 
         function(texto){
             var sesionIniciada = JSON.parse(texto);
-
-            if(sesionIniciada){
-                window.location ="../_html/index.html";
+            if(!sesionIniciada){
+                window.location ="../_php/CerrarSesion.php";
             }
         }, function(texto) {
             notificarUsuario("Error Ajax al comprobar sesión: " + texto);

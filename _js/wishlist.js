@@ -8,7 +8,7 @@ window.onload = inicializar;
 
 // ---------- VARIABLES GLOBALES ----------
 
-var contenido;
+var catalogo;
 
 
 // ---------- FUNCIONES GENERALES ----------
@@ -44,35 +44,51 @@ function objetoAParametrosParaRequest(objeto) {
 // ---------- MANEJADORES DE EVENTOS / COMUNICACIÓN CON PHP ----------
 
 function inicializar() {
-    /*document.getElementById("btnBuscar").addEventListener("click", cargarBusqueda, false);*/
-    obtenerJuegosWishlist();
-    contenido = document.getElementById("contenido");
+    obtenerWishlist();
+    catalogo = document.getElementById("catalogo");
+
+    //REDIRECCIONES
+    document.getElementById("cart").addEventListener("click", function(){
+        window.location.href = "../_html/index.html";
+    })
+    document.getElementById("btnBuscar").addEventListener("click", function(){
+        window.location.href = "../_html/index.html";
+    })
+    document.getElementById("inputBuscar").addEventListener("click", function(){
+        window.location.href = "../_html/index.html";
+    })
 }
 
-function comprobarSesionIniciada(){
-    llamadaAjax("../_php/ComprobarSesionIniciada.php", "", 
-        function(texto){
-            var sesionIniciada = JSON.parse(texto);
-            if(!sesionIniciada){
-                window.location ="../_php/CerrarSesion.php";
+function obtenerWishlist() {
+    llamadaAjax("../_php/WishlistObtener.php", "",
+        function(texto) {
+            catalogo.innerHTML = "";
+
+            var juegos = JSON.parse(texto);
+
+            if (juegos != null) {
+                for (var i=0; i<juegos.length; i++) {
+                    domCrearJuego(juegos[i]);
+                }
+            } else{
+                notificarUsuario("Tu wishlist está vacía");
+                window.location.href = "../_html/index.html";
             }
-        }, function(texto) {
-            notificarUsuario("Error Ajax al comprobar sesión: " + texto);
+
+        }, function (texto){
+            notificarUsuario("Error Ajax al cargar juegos: " + texto);
         }
     );
 }
-function obtenerJuegosWishlist() {
-    llamadaAjax("../_php/JuegoObtenerWishlist.php", "",
-        function(texto) {
-            
-            var juegos = JSON.parse(texto);
 
-            for (var i=0; i<juegos.length; i++) {
-                domCrearJuego(juegos[i]);
-            }
-        
-        }, function (texto){
-            notificarUsuario("Error Ajax al cargar juegos: " + texto);
+function borrarJuegoWishList(juegoId){
+    llamadaAjax("../_php/BorrarJuegoWishList.php", "juegoId="+parseInt(juegoId),
+        function(texto) {   
+          toast('<i class="far fa-heart-broken"></i> Eliminado de wishlist');
+          obtenerWishlist();
+        },
+        function(texto) {
+            notificarUsuario("Error Ajax al borrar juego de wishlist: " + texto);
         }
     );
 }
@@ -80,54 +96,103 @@ function obtenerJuegosWishlist() {
 // ---------- DOM GENERAL ----------
 
 function domCrearJuego(juego) {
+   
+    var divRow = document.createElement("div");
+    divRow.setAttribute("class", "row");
+    //divRow.setAttribute("id", 'card-'+juego.id);
+
+    var divCol = document.createElement("div");
+    divCol.setAttribute("class", "col-lg-4");
+
+    var divCard = document.createElement("div");
+    divCard.setAttribute("class", "card");
+    divCard.setAttribute("style", "width:18rem;");
+
+    var spanHeart = document.createElement("span");
+    spanHeart.setAttribute("class", "heart");
+
+    var iHeart = document.createElement("i");
+    iHeart.setAttribute("class", "fas fa-heart");
+    iHeart.addEventListener("click",  function () {
+       borrarJuegoWishList(juego.id); 
+    });
+
+    var imgCard = document.createElement("img");
+    imgCard.setAttribute("src","../_img/"+ juego.portada);
+    imgCard.setAttribute("class", "first-image");
+
+    var divBody = document.createElement("div");
+    divBody.setAttribute("class", "card-body");
+
+   /*  var a = document.createElement("a");
+    a.setAttribute("href", "#");
+    a.addEventListener("click", function(){
+        aniadirJuegoCarrito(juego.id);
+        if(cartOpen == false) {
+            document.getElementById("shopping-cart").style.display = "block";
+        }
+    })  */
     
-   /* var divCard = document.createElement("div");
-    divCard.setAttribute("class", "example-2 card");
-    divCard.setAttribute("id", juego.id);
+    var divPrice = document.createElement("div");
+    divPrice.setAttribute("class", "saleCallout");
 
-    var divWrapper = document.createElement("div");
-    divWrapper.setAttribute("class", "wrapper");
+    var h5Price = document.createElement("h5");
+    h5Price.setAttribute("class", "h5Price")
+    h5Price.innerHTML= juego.precio+'€';
 
-    var divHeader = document.createElement("div");
-    divHeader.setAttribute("class", "header");
+    /* var hr = document.createElement("hr");
 
-    var divDate = document.createElement("div");
-    divDate.setAttribute("class", "date");
+    var divDesplegable = document.createElement("div");
+    divDesplegable.setAttribute("class", "card-body-a");
+    divDesplegable.setAttribute("id", "addtocart");
+    divDesplegable.innerHTML = " Añadir al carrito <i class='fas fa-cart-plus'></i> | "+ juego.precio+ '€';
+ */
+    var divDesplegable2 = document.createElement("div");
+    divDesplegable2.setAttribute("style", "text-align: center;");
+    
+    var aTitle = document.createElement("a");
+    aTitle.setAttribute("href", "../_html/juego.html?juegoId="+juego.id);
 
-    var spanDate = document.createElement("span");
-    spanDate.setAttribute("class", "year");
-    spanDate.innerHTML = pelicula.anio;
-    divDate.appendChild(spanDate);
 
-    var ulIconos = document.createElement("ul");
-      ulIconos.setAttribute("class", "menu-content");
-      var liCorazon = document.createElement("li");
-      var aCorazon = document.createElement("i");
-      aCorazon.setAttribute("href", "#");
-      aCorazon.setAttribute("class", "fas fa-heart");
-      aCorazon.setAttribute("id", "corazon");
-      aCorazon.setAttribute("title", "Añadir "+ juego.nombre + " a Favoritos");
-      aCorazon.setAttribute("data-placement", "top");
-      aCorazon.addEventListener("click", function(){
-        aniadirJuegoWishList(juego.id);
-      })
+    var h5 = document.createElement("h5");
+    h5.setAttribute("class", "card-title");
+    h5.innerHTML = juego.nombre;
       
-      liCorazon.appendChild(aCorazon);
-      ulIconos.appendChild(liCorazon);
-      divHeader.appendChild(divDate);
-      divHeader.appendChild(ulIconos);
-    */
+    aTitle.appendChild(h5);
 
-      var div1 = document.createElement("div");
-      div1.setAttribute("class", "card");
+    divDesplegable2.appendChild(aTitle);
+    
+    /* a.appendChild(divDesplegable); */
 
-      var imgCaratula = document.createElement("img");
-      imgCaratula.setAttribute("id", "imgNovedades");
-      imgCaratula.setAttribute("class", "imgNovedades");
-      imgCaratula.setAttribute("src", "../_img/"+juego.portada);    
-      imgCaratula.setAttribute("width", "270px");
-      imgCaratula.setAttribute("height", "400px");
+    divPrice.appendChild(h5Price);
 
-      div1.appendChild(imgCaratula);
-      contenido.appendChild(div1);
+    /* divBody.appendChild(a); */
+   /*  divBody.appendChild(hr); */
+    divBody.appendChild(divDesplegable2);
+
+    spanHeart.appendChild(iHeart);
+
+    divCard.appendChild(divPrice);
+    divCard.appendChild(spanHeart);
+    divCard.appendChild(imgCard);
+    divCard.appendChild(divBody);
+
+    divCol.appendChild(divCard);
+
+    divRow.appendChild(divCol);
+
+    catalogo.appendChild(divRow);
+    
+
     }
+// ---------- JQQUERY ----------
+
+    function toast(texto){
+        var list = document.getElementById("toast");
+        list.classList.add("show");
+        list.innerHTML = texto;
+        setTimeout(function(){
+        list.classList.remove("show");
+        },3000);
+    }
+    

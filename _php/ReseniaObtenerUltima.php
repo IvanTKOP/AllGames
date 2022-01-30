@@ -1,7 +1,8 @@
-<?php 
+<?php
+
 require_once "../_com/_DAO.php";
 
-$resultado = DAO::juegosObtenerWishList($_SESSION["id"]);
+$resultado = DAO::reseniaObtenerUltimaInsertada();
 
 echo json_encode($resultado);
 
