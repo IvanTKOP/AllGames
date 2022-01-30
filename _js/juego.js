@@ -28,7 +28,7 @@ function inicializar() {
     obtenerPlataforma(juegoId);
     obtenerResenias(juegoId);
 
-    infoPelicula = document.getElementById("infoPelicula");
+    infoJuego = document.getElementById("infoJuego");
 
     cartOpen = false;
 

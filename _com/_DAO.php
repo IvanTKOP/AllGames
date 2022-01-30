@@ -148,10 +148,13 @@ public static function usuarioCrear(array $arrayUsuario): void
 
 public static function usuarioBorrar(): void
 {
-    self::ejecutarUpdel(
+
+    self::ejecutarConsulta(
         "DELETE FROM usuario WHERE id=?",
         [$_SESSION["id"]]
     );
+
+    self::destruirSesionRamYCookie();
 
 }
 

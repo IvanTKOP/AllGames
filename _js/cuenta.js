@@ -154,6 +154,19 @@ function actualizarUsuario(identificador, email, contrasenna){
     }
 }
 
+function eliminarUsuario(){
+    llamadaAjax("../_php/UsuarioEliminar.php","",
+    function(texto) {
+
+        notificarUsuario("Usuario eliminado correctamente.");
+        window.location.href = "../_html/sesion-inicio-formulario.html";
+
+    }, function (texto){
+        notificarUsuario("Error Ajax al obtener usuario: " + texto);
+    }
+);
+}
+
 // ---------- DOM GENERAL ----------
 
 function domCrearPerfil(usuario){
@@ -246,6 +259,13 @@ function domCrearPerfil(usuario){
     btnGuardar.setAttribute("class", "form-control btn btn-register");      
     btnGuardar.innerHTML ="Guardar Cambios";
 
+    var btnBorrar = document.createElement("button");
+    btnBorrar.addEventListener("click", function(){
+        eliminarUsuario();
+    });  
+    btnBorrar.setAttribute("class", "form-control btn btn-danger");      
+    btnBorrar.innerHTML ='<i class="fas fa-trash"></i>Eliminar Usuario';
+
     divButton.appendChild(btnGuardar);
     divRow2.appendChild(divButton);
     divForm5.appendChild(divRow2);
@@ -267,6 +287,7 @@ function domCrearPerfil(usuario){
     divCol12.appendChild(divForm3);
     divCol12.appendChild(divForm4);
     divCol12.appendChild(divForm5);
+    divCol12.appendChild(btnBorrar);
 
     divRow.appendChild(divCol12);
 
