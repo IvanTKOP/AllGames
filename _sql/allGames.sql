@@ -22,7 +22,7 @@ SET
   --
   -- Estructura de tabla para la tabla `carrito`
   --
-  CREATE TABLE `carrito` (
+  CREATE TABLE `carrito`(
     `pedidoId` int(11) NOT NULL,
     `juegoId` int(11) NOT NULL,
     `unidades` int(11) NOT NULL

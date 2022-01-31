@@ -120,6 +120,9 @@ function domCrearJuego(juego) {
     var imgCard = document.createElement("img");
     imgCard.setAttribute("src","../_img/"+ juego.portada);
     imgCard.setAttribute("class", "first-image");
+    imgCard.addEventListener("click" , function(){
+        window.location.href = "../_html/juego.html?juegoId="+juego.id;
+    });
 
     var divBody = document.createElement("div");
     divBody.setAttribute("class", "card-body");
